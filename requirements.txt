@@ -5,3 +5,5 @@ python-dotenv
 pypdf2
 sentence-transformers
 chromadb
+flask
+flask-cors

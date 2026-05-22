@@ -88,6 +88,41 @@ python cli.py index
 
 ---
 
+## Running the Web Interface
+
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+Start the server:
+```bash
+python app.py
+```
+
+Open in browser:
+```
+http://localhost:5001
+```
+
+To stop the server: `Ctrl+C` in the terminal.
+
+### Sharing with Teammates (same network)
+
+Find your local IP address:
+- **Mac:** System Preferences → Network → Wi-Fi → IP Address
+- **Windows:** `ipconfig` in terminal, look for IPv4 Address
+
+Your teammates on the same Wi-Fi can access:
+```
+http://your-ip-address:5001
+```
+
+Each person enters their name on first load — all activity is tracked in
+`activity_log.json` and visible in the sidebar of the web interface.
+
+---
+
 ## Team Git Workflow
 
 ### Before you start working — always pull first:
