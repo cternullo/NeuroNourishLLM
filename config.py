@@ -1,17 +1,10 @@
 import os
-from pathlib import Path
-from dotenv import load_dotenv
 
-# Load variables from .env in the project root
-load_dotenv(dotenv_path=Path(__file__).parent / ".env")
-
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-VAULT_PATH = os.getenv("VAULT_PATH")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+VAULT_PATH = os.environ.get("VAULT_PATH", "/app")
 
 if not GROQ_API_KEY:
-    raise EnvironmentError("GROQ_API_KEY is not set in .env")
-if not VAULT_PATH:
-    raise EnvironmentError("VAULT_PATH is not set in .env")
+    raise EnvironmentError("GROQ_API_KEY environment variable is not set")
 
 MODEL = "llama-3.3-70b-versatile"
 
