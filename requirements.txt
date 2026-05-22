@@ -1,0 +1,7 @@
+groq
+requests
+beautifulsoup4
+python-dotenv
+pypdf2
+sentence-transformers
+chromadb
