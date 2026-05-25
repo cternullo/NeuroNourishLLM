@@ -49,9 +49,7 @@ html, body {
   padding: 18px 16px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
 
-.brand {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
-}
+.brand { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .brand-icon { font-size: 20px; }
 .brand-name { font-size: 15px; font-weight: 700; color: var(--accent-h); letter-spacing: -0.3px; flex: 1; }
 .sidebar-close {
@@ -61,9 +59,7 @@ html, body {
 }
 .sidebar-close:hover { background: var(--surface2); color: var(--text); }
 
-.user-row {
-  display: flex; align-items: center; gap: 7px; margin-bottom: 10px; flex-wrap: wrap;
-}
+.user-row { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; flex-wrap: wrap; }
 .user-name { font-size: 13px; font-weight: 600; color: var(--text); }
 .role-badge {
   padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700;
@@ -81,20 +77,14 @@ html, body {
 
 /* ── Sidebar body ────────────────────────────────────────────────── */
 
-.sidebar-scroll {
-  flex: 1; overflow-y: auto; display: flex; flex-direction: column;
-}
+.sidebar-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
 .sidebar-scroll::-webkit-scrollbar { width: 3px; }
 .sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-.sb-section {
-  padding: 14px 14px 16px; border-bottom: 1px solid var(--border);
-}
+.sb-section { padding: 14px 14px 16px; border-bottom: 1px solid var(--border); }
 .sb-section:last-child { border-bottom: none; flex: 1; }
 
-.sb-section-head {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
-}
+.sb-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .sb-label {
   font-size: 10px; font-weight: 700; letter-spacing: 0.9px;
   text-transform: uppercase; color: var(--text-muted);
@@ -129,8 +119,7 @@ html, body {
 
 .badge {
   display: inline-block; padding: 1px 6px; border-radius: 3px;
-  font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
-  flex-shrink: 0;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.3px; flex-shrink: 0;
 }
 .badge-topic  { background: #162040; color: #5b9cf6; }
 .badge-url    { background: #261640; color: #9b7de8; }
@@ -144,10 +133,7 @@ html, body {
 
 /* ── Activity list ───────────────────────────────────────────────── */
 
-.activity-list {
-  display: flex; flex-direction: column; gap: 10px;
-  max-height: 280px; overflow-y: auto;
-}
+.activity-list { display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto; }
 .activity-list::-webkit-scrollbar { width: 3px; }
 .activity-list::-webkit-scrollbar-thumb { background: var(--border); }
 
@@ -156,8 +142,7 @@ html, body {
 .act-user { font-size: 11px; font-weight: 700; color: var(--text); }
 .act-detail {
   font-size: 11px; color: var(--text-muted); line-height: 1.4;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .act-time { font-size: 10px; color: var(--text-muted); }
 
@@ -174,17 +159,13 @@ html, body {
 /* ── Mobile backdrop ─────────────────────────────────────────────── */
 
 .sidebar-backdrop {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.6); z-index: 100;
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100;
 }
 .sidebar-backdrop.visible { display: block; }
 
 /* ── Main area ───────────────────────────────────────────────────── */
 
-.main {
-  flex: 1; display: flex; flex-direction: column;
-  overflow: hidden; min-width: 0;
-}
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
 .mobile-header {
   display: none; padding: 12px 16px;
@@ -198,7 +179,7 @@ html, body {
 }
 .mobile-brand { font-size: 14px; font-weight: 700; color: var(--accent-h); }
 
-/* ── Main nav (Research / Chat tabs) ─────────────────────────────── */
+/* ── Main nav ────────────────────────────────────────────────────── */
 
 .main-nav {
   display: flex; border-bottom: 1px solid var(--border);
@@ -207,8 +188,7 @@ html, body {
 .main-tab {
   padding: 14px 22px; background: none; border: none; border-bottom: 2px solid transparent;
   color: var(--text-muted); font-size: 14px; font-weight: 500; cursor: pointer;
-  margin-bottom: -1px; transition: all 0.15s; font-family: var(--font);
-  min-height: 44px;
+  margin-bottom: -1px; transition: all 0.15s; font-family: var(--font); min-height: 44px;
 }
 .main-tab:hover { color: var(--text); }
 .main-tab.active { color: var(--text); border-bottom-color: var(--accent); }
@@ -216,16 +196,11 @@ html, body {
 /* ── Panels ──────────────────────────────────────────────────────── */
 
 .panels { flex: 1; overflow: hidden; min-height: 0; }
-
 .panel { display: none; height: 100%; flex-direction: column; }
 .panel.active { display: flex; }
-
-/* Research panel scrolls its own content */
 #panel-research { overflow-y: auto; }
 
-.panel-inner {
-  padding: 28px 32px; max-width: 780px; margin: 0 auto; width: 100%;
-}
+.panel-inner { padding: 28px 32px; max-width: 780px; margin: 0 auto; width: 100%; }
 
 /* ── Ingest card ─────────────────────────────────────────────────── */
 
@@ -245,12 +220,6 @@ html, body {
 }
 .ingest-tab:hover:not(:disabled) { color: var(--text); }
 .ingest-tab.active { background: var(--accent); color: #fff; font-weight: 600; }
-.ingest-tab.coming-soon { opacity: 0.45; cursor: not-allowed; font-size: 11px; }
-.soon-tag {
-  display: inline-block; background: var(--surface3); border-radius: 3px;
-  padding: 1px 4px; font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
-  color: var(--text-muted); margin-left: 3px; vertical-align: middle;
-}
 
 .ingest-pane { display: none; }
 .ingest-pane.active { display: block; }
@@ -267,12 +236,19 @@ html, body {
   border: none; border-radius: 7px; font-family: var(--font);
   cursor: pointer; font-weight: 600; transition: all 0.12s;
 }
-.btn-primary {
-  background: var(--accent); color: #fff;
-  padding: 10px 20px; font-size: 14px;
-}
+.btn-primary { background: var(--accent); color: #fff; padding: 10px 20px; font-size: 14px; }
 .btn-primary:hover { background: var(--accent-h); }
 .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; min-height: 30px; }
+.btn-ghost {
+  background: none; border: 1px solid var(--border); color: var(--text-muted);
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--text); border-color: var(--text-muted); }
+.btn-ghost:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-danger {
+  background: #2a0e0e; border: 1px solid #5a1a1a; color: var(--error);
+}
+.btn-danger:hover { background: #3a1414; border-color: var(--error); }
 .full-btn { width: 100%; padding: 11px; }
 .helper { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
 
@@ -283,9 +259,7 @@ html, body {
   padding: 28px 20px; text-align: center; cursor: pointer;
   transition: all 0.15s; margin-bottom: 12px; position: relative;
 }
-.drop-zone:hover, .drop-zone.drag-over {
-  border-color: var(--accent); background: var(--accent-dim);
-}
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: var(--accent-dim); }
 .drop-zone input[type="file"] {
   position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
 }
@@ -296,9 +270,7 @@ html, body {
 
 /* ── Ingest status ───────────────────────────────────────────────── */
 
-.status {
-  margin-top: 12px; padding: 9px 13px; border-radius: 7px; font-size: 13px;
-}
+.status { margin-top: 12px; padding: 9px 13px; border-radius: 7px; font-size: 13px; }
 .status.ok  { background: #0c2a1e; color: var(--success); }
 .status.err { background: #2a0e0e; color: var(--error); }
 .hidden { display: none !important; }
@@ -312,9 +284,7 @@ html, body {
   font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
   text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;
 }
-
 .suggestion-cards { display: flex; flex-direction: column; gap: 10px; }
-
 .suggestion-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 8px; padding: 16px 18px;
@@ -327,18 +297,79 @@ html, body {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
 }
-
 .suggestion-card-body { display: flex; gap: 12px; align-items: flex-start; }
 .suggestion-arrow { color: var(--accent-h); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
 .suggestion-text { flex: 1; line-height: 1.55; font-size: 13px; }
-
 .suggestion-ingest-btn {
   align-self: flex-start; padding: 6px 14px;
   background: var(--accent-dim); border: 1px solid var(--accent);
   border-radius: 6px; color: var(--accent-h); font-size: 12px; font-weight: 500;
   cursor: pointer; transition: all 0.15s; font-family: var(--font);
 }
-.suggestion-ingest-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.suggestion-ingest-btn:hover { background: var(--accent); color: #fff; }
+
+/* ── Vault panel ─────────────────────────────────────────────────── */
+
+.vault-toolbar {
+  padding: 16px 24px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.vault-search-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.vault-search-input {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 9px 14px; color: var(--text);
+  font-size: 13px; outline: none; transition: border-color 0.15s; font-family: var(--font);
+}
+.vault-search-input:focus { border-color: var(--accent); }
+
+.vault-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filter-select {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-size: 12px; padding: 6px 10px; outline: none;
+  cursor: pointer; font-family: var(--font); min-height: 32px; transition: border-color 0.12s;
+}
+.filter-select:focus { border-color: var(--accent); }
+.vault-count { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+
+.vault-grid {
+  flex: 1; overflow-y: auto; padding: 16px 24px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px; align-content: start;
+}
+.vault-grid::-webkit-scrollbar { width: 5px; }
+.vault-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.vault-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; cursor: pointer; transition: border-color 0.15s;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.vault-card:hover { border-color: var(--accent); }
+
+.vault-card-head { display: flex; align-items: center; gap: 6px; }
+.vault-card-year { font-size: 11px; color: var(--text-muted); }
+.vault-card-wc   { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+.vault-card-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
+.vault-card-meta {
+  font-size: 11px; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vault-card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag-chip {
+  display: inline-block; padding: 1px 6px; border-radius: 3px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
+}
+.tag-biomarker { background: #1a1030; color: #a070e8; }
+.tag-condition  { background: #0a2010; color: #60b870; }
+.vault-card-footer {
+  display: flex; justify-content: space-between; align-items: center; margin-top: 2px;
+}
+.vault-card-date { font-size: 10px; color: var(--text-muted); }
+.vault-card-by   { font-size: 10px; color: var(--text-muted); }
+.vault-empty {
+  grid-column: 1 / -1; padding: 48px 20px;
+  text-align: center; color: var(--text-muted); font-size: 13px;
+}
+.vault-loading { grid-column: 1 / -1; padding: 48px 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
 
 /* ── Chat panel ──────────────────────────────────────────────────── */
 
@@ -349,9 +380,7 @@ html, body {
 .messages::-webkit-scrollbar { width: 5px; }
 .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-.welcome {
-  margin: auto; text-align: center; padding: 40px 20px; color: var(--text-muted);
-}
+.welcome { margin: auto; text-align: center; padding: 40px 20px; color: var(--text-muted); }
 .welcome-icon { font-size: 52px; margin-bottom: 14px; }
 .welcome h2 { font-size: 19px; color: var(--text); margin-bottom: 6px; font-weight: 600; }
 .welcome p { font-size: 13px; max-width: 320px; margin: 0 auto; }
@@ -360,9 +389,7 @@ html, body {
 .msg.user      { align-self: flex-end; }
 .msg.assistant { align-self: flex-start; }
 
-.bubble {
-  padding: 12px 16px; border-radius: 10px; font-size: 14px; line-height: 1.65;
-}
+.bubble { padding: 12px 16px; border-radius: 10px; font-size: 14px; line-height: 1.65; }
 .msg.user .bubble {
   background: var(--user-bg); border: 1px solid var(--user-border);
   color: #c2d4f0; border-radius: 10px 10px 2px 10px;
@@ -372,7 +399,6 @@ html, body {
   border-radius: 10px 10px 10px 2px;
 }
 
-/* Markdown in bubbles */
 .bubble h1 { font-size: 16px; margin: 10px 0 5px; color: var(--accent-h); }
 .bubble h2 { font-size: 14px; margin: 10px 0 4px; color: var(--accent-h); }
 .bubble h3 { font-size: 13px; margin: 8px 0 3px; color: var(--text); font-weight: 600; }
@@ -409,7 +435,7 @@ html, body {
 .copy-btn {
   background: none; border: 1px solid var(--border); border-radius: 5px;
   padding: 4px 10px; font-size: 11px; color: var(--text-muted); cursor: pointer;
-  transition: all 0.15s; font-family: var(--font);
+  transition: all 0.15s; font-family: var(--font); min-height: 28px;
 }
 .copy-btn:hover { background: var(--surface2); color: var(--text); }
 .copy-btn.copied { color: var(--success); border-color: var(--success); }
@@ -428,6 +454,13 @@ html, body {
   background: var(--surface2); border: 1px solid var(--border);
   color: var(--text-muted); font-size: 11px; font-family: var(--font);
   cursor: pointer; transition: all 0.15s;
+  animation: chip-in 0.25s ease both;
+}
+.chip:nth-child(2) { animation-delay: 0.06s; }
+.chip:nth-child(3) { animation-delay: 0.12s; }
+@keyframes chip-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
 }
 .chip:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent-h); }
 .chip-arrow { color: var(--accent); }
@@ -447,6 +480,15 @@ html, body {
   40%            { opacity: 1;   transform: scale(1.0); }
 }
 
+/* ── Spinner ─────────────────────────────────────────────────────── */
+
+.spinner {
+  display: inline-block; width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite; vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ── Chat bar ────────────────────────────────────────────────────── */
 
 .chat-bar {
@@ -456,8 +498,7 @@ html, body {
 #chat-input {
   flex: 1; background: var(--surface2); border: 1px solid var(--border);
   border-radius: 8px; padding: 11px 15px; color: var(--text);
-  font-size: 14px; outline: none; transition: border-color 0.15s;
-  font-family: var(--font);
+  font-size: 14px; outline: none; transition: border-color 0.15s; font-family: var(--font);
 }
 #chat-input:focus { border-color: var(--accent); }
 #send-btn { padding: 11px 22px; font-size: 14px; }
@@ -475,23 +516,25 @@ html, body {
 .modal {
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
   display: flex; flex-direction: column; overflow: hidden;
-  animation: slide-up 0.15s ease; width: min(720px, 92vw); max-height: 84vh;
+  animation: slide-up 0.15s ease; width: min(760px, 94vw); max-height: 90vh;
 }
 @keyframes slide-up { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 .modal-head {
   padding: 13px 18px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 10px;
 }
-.modal-head h2 { font-size: 14px; font-weight: 600; }
+.modal-head h2 { font-size: 14px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.modal-head-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .modal-x {
   background: none; border: none; color: var(--text-muted);
-  font-size: 22px; cursor: pointer; line-height: 1; padding: 0 2px;
+  font-size: 22px; cursor: pointer; line-height: 1; padding: 0 2px; min-width: 28px; min-height: 28px;
+  display: flex; align-items: center; justify-content: center;
 }
 .modal-x:hover { color: var(--text); }
 
 .modal-body {
-  padding: 20px 22px; overflow-y: auto; font-size: 13px; line-height: 1.7;
+  padding: 20px 22px; overflow-y: auto; font-size: 13px; line-height: 1.7; flex: 1;
 }
 .modal-body::-webkit-scrollbar { width: 4px; }
 .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -514,6 +557,20 @@ html, body {
 }
 .modal-body pre code { background: none; padding: 0; }
 
+.modal-edit-area {
+  flex: 1; margin: 0; padding: 16px 22px;
+  background: var(--surface2); border: none; border-top: 1px solid var(--border);
+  color: var(--text); font-family: var(--mono); font-size: 12px; line-height: 1.6;
+  resize: none; outline: none; min-height: 300px;
+}
+.modal-edit-area:focus { border-color: var(--accent); }
+
+.modal-foot {
+  padding: 12px 18px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.modal-save-status { font-size: 12px; color: var(--text-muted); margin-left: 6px; }
+
 /* ── Mobile responsive ───────────────────────────────────────────── */
 
 @media (max-width: 768px) {
@@ -524,26 +581,42 @@ html, body {
   .sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
   .sidebar-close { display: flex; }
   .mobile-header { display: flex; }
-  .main-nav { padding: 0 12px; }
+  .main-nav { padding: 0 8px; }
   .main-tab { padding: 12px 14px; font-size: 13px; }
-  .panel-inner { padding: 18px 16px; }
-  .messages { padding: 18px 16px; }
-  .chat-bar { padding: 12px 16px; }
-  .ingest-card { padding: 16px; }
-  .main-tab { min-height: 44px; }
+  .panel-inner { padding: 16px 14px; }
+  .messages { padding: 16px 14px; }
+  .chat-bar { padding: 10px 14px; position: sticky; bottom: 0; }
+  .ingest-card { padding: 14px; }
+  .vault-toolbar { padding: 12px 14px 10px; }
+  .vault-grid { padding: 12px 14px; grid-template-columns: 1fr; }
+  .vault-filters { gap: 6px; }
+  .filter-select { font-size: 11px; padding: 5px 8px; }
+  .modal { width: 96vw; max-height: 96vh; }
+  .modal-head-actions .btn-sm { padding: 5px 8px; font-size: 11px; }
 }
 </style>
 </head>
 <body>
 
-<!-- Note viewer modal -->
+<!-- Note modal -->
 <div class="overlay hidden" id="note-overlay">
   <div class="modal">
     <div class="modal-head">
       <h2 id="note-title"></h2>
-      <button class="modal-x" id="note-close">&times;</button>
+      <div class="modal-head-actions">
+        <button class="btn btn-sm btn-ghost hidden" id="modal-reindex-btn" title="Re-embed in vector index">Re-index</button>
+        <button class="btn btn-sm btn-ghost hidden" id="modal-edit-btn">Edit</button>
+        <button class="btn btn-sm btn-danger hidden" id="modal-delete-btn">Delete</button>
+        <button class="modal-x" id="note-close">&times;</button>
+      </div>
     </div>
     <div class="modal-body" id="note-body"></div>
+    <textarea class="modal-edit-area hidden" id="modal-edit-area" spellcheck="false"></textarea>
+    <div class="modal-foot hidden" id="modal-foot">
+      <button class="btn btn-primary btn-sm" id="modal-save-btn">Save changes</button>
+      <button class="btn btn-sm btn-ghost" id="modal-cancel-btn">Cancel</button>
+      <span class="modal-save-status hidden" id="modal-save-status"></span>
+    </div>
   </div>
 </div>
 
@@ -611,6 +684,7 @@ html, body {
       <button class="main-tab active" data-panel="research">Research</button>
       {% endif %}
       <button class="main-tab{% if role == 'viewer' %} active{% endif %}" data-panel="chat">Chat</button>
+      <button class="main-tab" data-panel="vault">Vault</button>
     </nav>
 
     <div class="panels">
@@ -620,7 +694,6 @@ html, body {
       <div class="panel active" id="panel-research">
         <div class="panel-inner">
 
-          <!-- Ingest section -->
           <div class="ingest-card">
             <div class="ingest-tabs">
               <button class="ingest-tab active" data-ingest="topic">Topic</button>
@@ -701,16 +774,54 @@ html, body {
         </div>
       </div>
 
+      <!-- ── VAULT PANEL ─────────────────────────────────────────── -->
+      <div class="panel" id="panel-vault">
+        <div class="vault-toolbar">
+          <div class="vault-search-row">
+            <input type="text" id="vault-search" class="vault-search-input"
+                   placeholder="Search notes by title, author, biomarker…" autocomplete="off">
+            <button class="btn btn-sm btn-ghost" id="vault-refresh">↻</button>
+          </div>
+          <div class="vault-filters">
+            <select id="filter-type" class="filter-select">
+              <option value="">All types</option>
+              <option value="topic">Topic</option>
+              <option value="url">URL</option>
+              <option value="pdf">PDF</option>
+              <option value="pubmed">PubMed</option>
+              <option value="doi">DOI</option>
+            </select>
+            <select id="filter-biomarker" class="filter-select">
+              <option value="">All biomarkers</option>
+            </select>
+            <select id="filter-condition" class="filter-select">
+              <option value="">All conditions</option>
+            </select>
+            <select id="filter-year" class="filter-select">
+              <option value="">All years</option>
+            </select>
+            <span id="vault-count" class="vault-count"></span>
+          </div>
+        </div>
+        <div class="vault-grid" id="vault-grid">
+          <div class="vault-loading">Loading notes…</div>
+        </div>
+      </div>
+
     </div><!-- /panels -->
   </main>
 </div><!-- /layout -->
 
 <script>
 // ─────────────────────────────────────────────────────────────
-// State
+// Constants & State
 // ─────────────────────────────────────────────────────────────
+const CURRENT_ROLE = '{{ role }}';
 let chatHistory = [];
 let lastActivityTs = null;
+let vaultNotes = [];
+let currentNoteFile = null;
+let vaultLoaded = false;
 
 // ─────────────────────────────────────────────────────────────
 // Utilities
@@ -731,11 +842,19 @@ function relTime(iso) {
   return new Date(iso).toLocaleDateString('en', { month:'short', day:'numeric' });
 }
 
+function fmtDate(iso) {
+  const diff = (Date.now() - new Date(iso)) / 1000;
+  if (diff < 60)    return 'just now';
+  if (diff < 3600)  return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return new Date(iso).toLocaleDateString('en', { month:'short', day:'numeric' });
+}
+
 // ─────────────────────────────────────────────────────────────
 // Markdown → HTML
 // ─────────────────────────────────────────────────────────────
 function mdToHtml(md) {
-  // Strip YAML frontmatter before rendering
+  // Strip YAML frontmatter
   md = md.replace(/^---\n[\s\S]*?\n---\n?/, '');
   const blocks = [];
   md = md.replace(/```[\w]*\n?([\s\S]*?)```/g, (_, code) => {
@@ -754,7 +873,12 @@ function mdToHtml(md) {
       .map(l => `<li>${l.replace(/^[*\-] /, '')}</li>`).join('');
     return `<ul>${items}</ul>`;
   });
-  md = md.replace(/^(?!<[hup]|<hr|<ul|<pre|\x00)(.+)$/gm, '<p>$1</p>');
+  md = md.replace(/((?:^\d+\. .+\n?)+)/gm, match => {
+    const items = match.trim().split('\n')
+      .map(l => `<li>${l.replace(/^\d+\. /, '')}</li>`).join('');
+    return `<ol>${items}</ol>`;
+  });
+  md = md.replace(/^(?!<[hup]|<hr|<ul|<ol|<pre|\x00)(.+)$/gm, '<p>$1</p>');
   md = md.replace(/\x00BLOCK(\d+)\x00/g, (_, i) => blocks[+i]);
   return md;
 }
@@ -775,7 +899,7 @@ document.getElementById('sidebar-close').addEventListener('click', closeSidebar)
 document.getElementById('sidebar-backdrop').addEventListener('click', closeSidebar);
 
 // ─────────────────────────────────────────────────────────────
-// Main tab switching (Research / Chat)
+// Main tab switching
 // ─────────────────────────────────────────────────────────────
 document.querySelectorAll('.main-tab').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -784,7 +908,10 @@ document.querySelectorAll('.main-tab').forEach(btn => {
     btn.classList.add('active');
     const panel = document.getElementById('panel-' + btn.dataset.panel);
     if (panel) panel.classList.add('active');
-    // Clear activity dot when user manually switches to check chat
+    if (btn.dataset.panel === 'vault' && !vaultLoaded) {
+      loadVaultNotes();
+      vaultLoaded = true;
+    }
     if (btn.dataset.panel === 'chat') {
       document.getElementById('activity-dot')?.classList.add('hidden');
     }
@@ -792,9 +919,9 @@ document.querySelectorAll('.main-tab').forEach(btn => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// Ingest sub-tab switching (Topic / URL / PDF)
+// Ingest sub-tab switching
 // ─────────────────────────────────────────────────────────────
-document.querySelectorAll('.ingest-tab:not(.coming-soon)').forEach(btn => {
+document.querySelectorAll('.ingest-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.ingest-tab').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.ingest-pane').forEach(p => p.classList.remove('active'));
@@ -806,7 +933,7 @@ document.querySelectorAll('.ingest-tab:not(.coming-soon)').forEach(btn => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// Status helpers
+// Status / busy helpers
 // ─────────────────────────────────────────────────────────────
 function showStatus(msg, type) {
   const el = document.getElementById('ingest-status');
@@ -817,6 +944,7 @@ function showStatus(msg, type) {
 
 function setBusy(btnId, label, busy) {
   const btn = document.getElementById(btnId);
+  if (!btn) return;
   btn.disabled = busy;
   btn.textContent = busy ? '…' : label;
 }
@@ -856,7 +984,7 @@ if (dropZone) {
 // ─────────────────────────────────────────────────────────────
 async function ingestTopic(topic) {
   const val = topic || document.getElementById('topic-input').value.trim();
-  if (!val) return;
+  if (!val) { showStatus('Please enter a topic.', 'err'); return; }
   setBusy('topic-btn', 'Ingest', true);
   showStatus('Fetching from Wikipedia…', '');
   try {
@@ -867,11 +995,11 @@ async function ingestTopic(topic) {
     });
     if (d.success) {
       showStatus(`✓ ${d.filename}  (${d.word_count} words)`, 'ok');
-      document.getElementById('topic-input').value = '';
-      loadNotes();
+      if (!topic) document.getElementById('topic-input').value = '';
+      loadNotes(); loadVaultNotes();
       showSuggestionCards(d.suggestions || []);
     } else {
-      showStatus('Error: ' + d.error, 'err');
+      showStatus('Error: ' + (d.error || 'Unknown error'), 'err');
       hideSuggestions();
     }
   } catch (e) {
@@ -891,7 +1019,7 @@ document.getElementById('topic-input')?.addEventListener('keydown', e => {
 // ─────────────────────────────────────────────────────────────
 async function ingestUrl() {
   const val = document.getElementById('url-input').value.trim();
-  if (!val) return;
+  if (!val) { showStatus('Please enter a URL.', 'err'); return; }
   setBusy('url-btn', 'Ingest', true);
   showStatus('Fetching URL…', '');
   try {
@@ -903,10 +1031,10 @@ async function ingestUrl() {
     if (d.success) {
       showStatus(`✓ ${d.filename}  (${d.word_count} words)`, 'ok');
       document.getElementById('url-input').value = '';
-      loadNotes();
+      loadNotes(); loadVaultNotes();
       showSuggestionCards(d.suggestions || []);
     } else {
-      showStatus('Error: ' + d.error, 'err');
+      showStatus('Error: ' + (d.error || 'Unknown error'), 'err');
       hideSuggestions();
     }
   } catch (e) {
@@ -927,24 +1055,30 @@ document.getElementById('url-input')?.addEventListener('keydown', e => {
 document.getElementById('pdf-btn')?.addEventListener('click', async () => {
   const fi = document.getElementById('pdf-input');
   if (!fi.files.length) { showStatus('Please select a PDF file.', 'err'); return; }
+  const fileSizeMB = fi.files[0].size / (1024 * 1024);
   setBusy('pdf-btn', 'Upload & Ingest', true);
-  showStatus('Uploading and processing PDF…', '');
+  showStatus('Uploading PDF…', '');
   const progress = document.getElementById('pdf-progress');
-  if (progress) { progress.textContent = 'Sending to AI…'; progress.classList.remove('hidden'); }
+  if (progress) {
+    progress.textContent = fileSizeMB > 1
+      ? 'Processing with AI — large PDFs may take 1–2 minutes…'
+      : 'Sending to AI…';
+    progress.classList.remove('hidden');
+  }
   try {
     const form = new FormData();
     form.append('file', fi.files[0]);
-    const res = await fetch('/ingest/pdf', { method: 'POST', body: form });
+    const res = await fetch('/ingest/pdf', { method: 'POST', body: form, credentials: 'include' });
     const d = await res.json();
     if (progress) progress.classList.add('hidden');
     if (d.success) {
       showStatus(`✓ ${d.filename}  (${d.word_count} words)`, 'ok');
       fi.value = '';
       dropFilenameEl.classList.add('hidden');
-      loadNotes();
+      loadNotes(); loadVaultNotes();
       showSuggestionCards(d.suggestions || []);
     } else {
-      showStatus('Error: ' + d.error, 'err');
+      showStatus('Error: ' + (d.error || 'Unknown error'), 'err');
       hideSuggestions();
     }
   } catch (e) {
@@ -960,7 +1094,7 @@ document.getElementById('pdf-btn')?.addEventListener('click', async () => {
 // ─────────────────────────────────────────────────────────────
 async function ingestPubmed() {
   const val = document.getElementById('pmid-input').value.trim();
-  if (!val) return;
+  if (!val) { showStatus('Please enter a PMID.', 'err'); return; }
   setBusy('pmid-btn', 'Ingest', true);
   showStatus('Fetching from PubMed…', '');
   try {
@@ -972,10 +1106,10 @@ async function ingestPubmed() {
     if (d.success) {
       showStatus(`✓ ${d.filename}  (${d.word_count} words)`, 'ok');
       document.getElementById('pmid-input').value = '';
-      loadNotes();
+      loadNotes(); loadVaultNotes();
       showSuggestionCards(d.suggestions || []);
     } else {
-      showStatus('Error: ' + d.error, 'err');
+      showStatus('Error: ' + (d.error || 'Unknown error'), 'err');
       hideSuggestions();
     }
   } catch (e) { showStatus('Error: ' + e.message, 'err'); hideSuggestions(); }
@@ -992,7 +1126,7 @@ document.getElementById('pmid-input')?.addEventListener('keydown', e => {
 // ─────────────────────────────────────────────────────────────
 async function ingestDoi() {
   const val = document.getElementById('doi-input').value.trim();
-  if (!val) return;
+  if (!val) { showStatus('Please enter a DOI.', 'err'); return; }
   setBusy('doi-btn', 'Ingest', true);
   showStatus('Fetching from CrossRef…', '');
   try {
@@ -1004,10 +1138,10 @@ async function ingestDoi() {
     if (d.success) {
       showStatus(`✓ ${d.filename}  (${d.word_count} words)`, 'ok');
       document.getElementById('doi-input').value = '';
-      loadNotes();
+      loadNotes(); loadVaultNotes();
       showSuggestionCards(d.suggestions || []);
     } else {
-      showStatus('Error: ' + d.error, 'err');
+      showStatus('Error: ' + (d.error || 'Unknown error'), 'err');
       hideSuggestions();
     }
   } catch (e) { showStatus('Error: ' + e.message, 'err'); hideSuggestions(); }
@@ -1039,18 +1173,15 @@ function showSuggestionCards(suggestions) {
 
   cards.querySelectorAll('.suggestion-ingest-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      // Switch to research tab + topic sub-tab and ingest directly
       document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
       const researchTab = document.querySelector('[data-panel="research"]');
       if (researchTab) researchTab.classList.add('active');
       document.getElementById('panel-research')?.classList.add('active');
-
       document.querySelectorAll('.ingest-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.ingest-pane').forEach(p => p.classList.remove('active'));
       document.querySelector('[data-ingest="topic"]')?.classList.add('active');
       document.getElementById('ingest-topic')?.classList.add('active');
-
       ingestTopic(btn.dataset.topic);
     });
   });
@@ -1063,7 +1194,7 @@ function hideSuggestions() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Notes list
+// Badge helpers (shared by sidebar + vault)
 // ─────────────────────────────────────────────────────────────
 const TYPE_BADGE = {
   topic:  '<span class="badge badge-topic">Wiki</span>',
@@ -1074,14 +1205,9 @@ const TYPE_BADGE = {
   wiki:   '<span class="badge badge-wiki">Wiki</span>',
 };
 
-function fmtDate(iso) {
-  const diff = (Date.now() - new Date(iso)) / 1000;
-  if (diff < 60)    return 'just now';
-  if (diff < 3600)  return Math.floor(diff/60) + 'm ago';
-  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
-  return new Date(iso).toLocaleDateString('en', { month:'short', day:'numeric' });
-}
-
+// ─────────────────────────────────────────────────────────────
+// Sidebar notes list
+// ─────────────────────────────────────────────────────────────
 async function loadNotes() {
   const list = document.getElementById('notes-list');
   try {
@@ -1110,20 +1236,113 @@ async function loadNotes() {
 document.getElementById('refresh-notes').addEventListener('click', loadNotes);
 
 // ─────────────────────────────────────────────────────────────
-// Note viewer modal
+// Note modal — open / view / edit / delete / reindex
 // ─────────────────────────────────────────────────────────────
 async function openNote(filename) {
+  currentNoteFile = filename;
   document.getElementById('note-title').textContent = filename.replace('.md', '');
   document.getElementById('note-body').innerHTML = '<div style="color:var(--text-muted)">Loading…</div>';
   document.getElementById('note-overlay').classList.remove('hidden');
+
+  const canEdit   = CURRENT_ROLE === 'researcher' || CURRENT_ROLE === 'admin';
+  const canDelete = CURRENT_ROLE === 'admin';
+  document.getElementById('modal-edit-btn').classList.toggle('hidden', !canEdit);
+  document.getElementById('modal-reindex-btn').classList.toggle('hidden', !canEdit);
+  document.getElementById('modal-delete-btn').classList.toggle('hidden', !canDelete);
+
+  exitEditMode(false);
+
   try {
-    const d = await apiFetch('/notes/' + encodeURIComponent(filename));
+    const d = await apiFetch('/api/notes/' + encodeURIComponent(filename));
     document.getElementById('note-body').innerHTML = mdToHtml(d.content || '');
+    document.getElementById('modal-edit-area').value = d.content || '';
   } catch (_) {
-    document.getElementById('note-body').textContent = 'Failed to load.';
+    document.getElementById('note-body').innerHTML = '<div style="color:var(--error)">Failed to load note.</div>';
   }
 }
 
+function enterEditMode() {
+  document.getElementById('note-body').classList.add('hidden');
+  document.getElementById('modal-edit-area').classList.remove('hidden');
+  document.getElementById('modal-foot').classList.remove('hidden');
+  document.getElementById('modal-edit-btn').textContent = 'Viewing…';
+  document.getElementById('modal-edit-btn').disabled = true;
+}
+
+function exitEditMode(resetText = true) {
+  document.getElementById('note-body').classList.remove('hidden');
+  document.getElementById('modal-edit-area').classList.add('hidden');
+  document.getElementById('modal-foot').classList.add('hidden');
+  document.getElementById('modal-save-status').classList.add('hidden');
+  if (resetText) {
+    document.getElementById('modal-edit-btn').textContent = 'Edit';
+    document.getElementById('modal-edit-btn').disabled = false;
+  }
+}
+
+async function saveNoteEdit() {
+  const content = document.getElementById('modal-edit-area').value;
+  const statusEl = document.getElementById('modal-save-status');
+  const saveBtn = document.getElementById('modal-save-btn');
+  saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+  statusEl.classList.add('hidden');
+  try {
+    const d = await apiFetch('/api/notes/' + encodeURIComponent(currentNoteFile), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+    });
+    if (d.success) {
+      document.getElementById('note-body').innerHTML = mdToHtml(content);
+      exitEditMode(true);
+      loadNotes(); loadVaultNotes();
+    } else {
+      statusEl.textContent = 'Error: ' + (d.error || 'Save failed');
+      statusEl.style.color = 'var(--error)';
+      statusEl.classList.remove('hidden');
+    }
+  } catch (e) {
+    statusEl.textContent = 'Error: ' + e.message;
+    statusEl.style.color = 'var(--error)';
+    statusEl.classList.remove('hidden');
+  }
+  saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
+}
+
+async function confirmDeleteNote() {
+  if (!currentNoteFile) return;
+  if (!confirm(`Permanently delete "${currentNoteFile}"? This cannot be undone.`)) return;
+  try {
+    const d = await apiFetch('/api/notes/' + encodeURIComponent(currentNoteFile), {
+      method: 'DELETE',
+    });
+    if (d.success) {
+      document.getElementById('note-overlay').classList.add('hidden');
+      loadNotes(); loadVaultNotes();
+    } else {
+      alert('Delete failed: ' + (d.error || 'Unknown error'));
+    }
+  } catch (e) {
+    alert('Delete failed: ' + e.message);
+  }
+}
+
+async function reindexCurrentNote() {
+  if (!currentNoteFile) return;
+  const btn = document.getElementById('modal-reindex-btn');
+  btn.disabled = true; btn.textContent = 'Indexing…';
+  try {
+    const d = await apiFetch('/api/notes/' + encodeURIComponent(currentNoteFile) + '/reindex', {
+      method: 'POST',
+    });
+    btn.textContent = d.success ? '✓ Done' : '✗ Failed';
+  } catch (_) {
+    btn.textContent = '✗ Failed';
+  }
+  setTimeout(() => { btn.textContent = 'Re-index'; btn.disabled = false; }, 2000);
+}
+
+// Modal event wiring
 document.getElementById('note-close').addEventListener('click', () =>
   document.getElementById('note-overlay').classList.add('hidden')
 );
@@ -1131,6 +1350,130 @@ document.getElementById('note-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('note-overlay'))
     document.getElementById('note-overlay').classList.add('hidden');
 });
+document.getElementById('modal-edit-btn').addEventListener('click', enterEditMode);
+document.getElementById('modal-cancel-btn').addEventListener('click', () => exitEditMode(true));
+document.getElementById('modal-save-btn').addEventListener('click', saveNoteEdit);
+document.getElementById('modal-delete-btn').addEventListener('click', confirmDeleteNote);
+document.getElementById('modal-reindex-btn').addEventListener('click', reindexCurrentNote);
+
+// ─────────────────────────────────────────────────────────────
+// Vault panel
+// ─────────────────────────────────────────────────────────────
+async function loadVaultNotes() {
+  const grid = document.getElementById('vault-grid');
+  if (grid) grid.innerHTML = '<div class="vault-loading"><span class="spinner"></span> Loading notes…</div>';
+  try {
+    const d = await apiFetch('/api/notes');
+    vaultNotes = (d.notes || []).sort((a, b) => b.modified.localeCompare(a.modified));
+    populateVaultFilters(vaultNotes);
+    renderVaultNotes();
+  } catch (_) {
+    if (grid) grid.innerHTML = '<div class="vault-empty" style="color:var(--error)">Failed to load notes.</div>';
+  }
+}
+
+function populateVaultFilters(notes) {
+  const biomarkers = new Set();
+  const conditions = new Set();
+  const years = new Set();
+  notes.forEach(n => {
+    (n.biomarkers || []).forEach(b => { if (b) biomarkers.add(b); });
+    (n.conditions || []).forEach(c => { if (c) conditions.add(c); });
+    if (n.year) years.add(n.year);
+  });
+
+  const bSel = document.getElementById('filter-biomarker');
+  const cSel = document.getElementById('filter-condition');
+  const ySel = document.getElementById('filter-year');
+
+  if (bSel) {
+    const prev = bSel.value;
+    bSel.innerHTML = '<option value="">All biomarkers</option>' +
+      [...biomarkers].sort().map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+    bSel.value = prev;
+  }
+  if (cSel) {
+    const prev = cSel.value;
+    cSel.innerHTML = '<option value="">All conditions</option>' +
+      [...conditions].sort().map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    cSel.value = prev;
+  }
+  if (ySel) {
+    const prev = ySel.value;
+    ySel.innerHTML = '<option value="">All years</option>' +
+      [...years].sort().reverse().map(y => `<option value="${esc(y)}">${esc(y)}</option>`).join('');
+    ySel.value = prev;
+  }
+}
+
+function renderVaultNotes() {
+  const grid = document.getElementById('vault-grid');
+  if (!grid) return;
+
+  const search    = (document.getElementById('vault-search')?.value || '').toLowerCase();
+  const typeF     = document.getElementById('filter-type')?.value || '';
+  const bioF      = document.getElementById('filter-biomarker')?.value || '';
+  const condF     = document.getElementById('filter-condition')?.value || '';
+  const yearF     = document.getElementById('filter-year')?.value || '';
+
+  const filtered = vaultNotes.filter(n => {
+    if (typeF && n.source_type !== typeF) return false;
+    if (bioF  && !(n.biomarkers || []).includes(bioF)) return false;
+    if (condF && !(n.conditions  || []).includes(condF)) return false;
+    if (yearF && n.year !== yearF) return false;
+    if (search) {
+      const hay = [
+        n.title, n.filename, n.journal,
+        ...(n.authors || []), ...(n.biomarkers || []), ...(n.conditions || []),
+      ].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  const countEl = document.getElementById('vault-count');
+  if (countEl) countEl.textContent = `${filtered.length} note${filtered.length !== 1 ? 's' : ''}`;
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="vault-empty">${vaultNotes.length ? 'No notes match the current filters.' : 'No notes in vault yet. Ingest a topic or paper to get started.'}</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(n => {
+    const bio = (n.biomarkers || []).map(b => `<span class="tag-chip tag-biomarker">${esc(b)}</span>`).join('');
+    const cond = (n.conditions || []).map(c => `<span class="tag-chip tag-condition">${esc(c)}</span>`).join('');
+    const tags = bio + cond;
+    const badge = TYPE_BADGE[n.source_type] || TYPE_BADGE.wiki;
+    const authors = (n.authors || []).slice(0,2).join(', ') + ((n.authors||[]).length > 2 ? ' et al.' : '');
+    const meta = [authors, n.journal].filter(Boolean).join(' · ');
+    return `
+      <div class="vault-card" data-file="${esc(n.filename)}">
+        <div class="vault-card-head">
+          ${badge}
+          ${n.year ? `<span class="vault-card-year">${esc(n.year)}</span>` : ''}
+          <span class="vault-card-wc">${n.word_count} w</span>
+        </div>
+        <div class="vault-card-title">${esc(n.title || n.filename.replace('.md','').replace(/_/g,' '))}</div>
+        ${meta ? `<div class="vault-card-meta">${esc(meta)}</div>` : ''}
+        ${tags ? `<div class="vault-card-tags">${tags}</div>` : ''}
+        <div class="vault-card-footer">
+          <span class="vault-card-date">${fmtDate(n.modified)}</span>
+          ${n.created_by ? `<span class="vault-card-by">by ${esc(n.created_by)}</span>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.vault-card').forEach(el =>
+    el.addEventListener('click', () => openNote(el.dataset.file))
+  );
+}
+
+// Filter event listeners
+['vault-search','filter-type','filter-biomarker','filter-condition','filter-year'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', renderVaultNotes);
+});
+document.getElementById('vault-refresh')?.addEventListener('click', loadVaultNotes);
 
 // ─────────────────────────────────────────────────────────────
 // Team Activity
@@ -1139,11 +1482,15 @@ const BADGE_CLASS = {
   ingest_topic:  'badge-topic',  ingest_url:    'badge-url',
   ingest_pdf:    'badge-pdf',    chat:          'badge-chat',
   ingest_pubmed: 'badge-pubmed', ingest_doi:    'badge-doi',
+  edit_note:     'badge-wiki',   delete_note:   'badge-wiki',
+  reindex_note:  'badge-wiki',
 };
 const BADGE_LABEL = {
   ingest_topic:  'Topic',  ingest_url:    'URL',
   ingest_pdf:    'PDF',    chat:          'Chat',
   ingest_pubmed: 'PubMed', ingest_doi:    'DOI',
+  edit_note:     'Edit',   delete_note:   'Delete',
+  reindex_note:  'Index',
 };
 
 async function loadActivity() {
@@ -1200,12 +1547,16 @@ async function sendChat() {
       body: JSON.stringify({ message: msg, history: chatHistory }),
     });
     loader.remove();
-    addAssistantBubble(d.response || '(no response)', d.sources || [], d.suggestions || []);
-    chatHistory.push({ role: 'user',      content: msg });
-    chatHistory.push({ role: 'assistant', content: d.response });
+    if (d.error) {
+      addAssistantBubble('**Error:** ' + d.error, [], []);
+    } else {
+      addAssistantBubble(d.response || '(no response)', d.sources || [], d.suggestions || []);
+      chatHistory.push({ role: 'user',      content: msg });
+      chatHistory.push({ role: 'assistant', content: d.response });
+    }
   } catch (e) {
     loader.remove();
-    addAssistantBubble('Error: ' + e.message, [], []);
+    addAssistantBubble('**Network error:** ' + e.message, [], []);
   }
 
   input.disabled = false;
@@ -1225,7 +1576,6 @@ function addAssistantBubble(text, sources, suggestions = []) {
   const div = document.createElement('div');
   div.className = 'msg assistant';
 
-  // Source citation cards
   const sourcesHtml = sources.length
     ? `<div class="sources-row">${
         sources.map(s => `
@@ -1236,13 +1586,11 @@ function addAssistantBubble(text, sources, suggestions = []) {
       }</div>`
     : '';
 
-  // Copy + action bar
   const actionsHtml = `
     <div class="msg-actions">
       <button class="copy-btn" data-text="${esc(text)}">Copy</button>
     </div>`;
 
-  // Suggestion chips
   const chipsHtml = suggestions.length
     ? `<div class="chat-suggest-wrap">
         <div class="chip-label">Explore next</div>
@@ -1265,8 +1613,7 @@ function addAssistantBubble(text, sources, suggestions = []) {
       navigator.clipboard.writeText(btn.dataset.text).catch(() => {
         const ta = document.createElement('textarea');
         ta.value = btn.dataset.text;
-        document.body.appendChild(ta);
-        ta.select();
+        document.body.appendChild(ta); ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
       });
@@ -1307,12 +1654,13 @@ document.getElementById('chat-input').addEventListener('keydown', e => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// API helper (credentials: include sends session cookie)
+// API helper
 // ─────────────────────────────────────────────────────────────
 async function apiFetch(url, opts = {}) {
   opts.credentials = 'include';
   const res = await fetch(url, opts);
   if (res.status === 401) { window.location.href = '/auth/login'; return {}; }
+  if (res.status === 403) { return { error: 'Insufficient permissions' }; }
   return res.json();
 }
 

@@ -1,21 +1,26 @@
 """
-NeuroNourish Flask server — Phase 5
+NeuroNourish Flask server — Phase 6
 
 Routes:
-  GET  /                    → serve index.html (login required)
-  POST /ingest/topic        → ingest Wikipedia topic (researcher+admin)
-  POST /ingest/url          → ingest URL (researcher+admin)
-  POST /ingest/pdf          → ingest uploaded PDF (researcher+admin)
-  POST /ingest/pubmed       → ingest PubMed record by PMID (researcher+admin)
-  POST /ingest/doi          → ingest paper by DOI via CrossRef (researcher+admin)
-  POST /chat                → RAG chat (all authenticated)
-  GET  /notes               → list vault notes (all authenticated)
-  GET  /notes/<name>        → fetch note content (all authenticated)
-  POST /index               → regenerate INDEX.md (admin only)
-  GET  /activity            → last 50 activity log entries (all authenticated)
-  GET/POST /auth/login      → login page
-  GET/POST /auth/register   → register page
-  GET  /auth/logout         → logout
+  GET  /                         → serve index.html (login required)
+  POST /ingest/topic             → ingest Wikipedia topic (researcher+admin)
+  POST /ingest/url               → ingest URL (researcher+admin)
+  POST /ingest/pdf               → ingest uploaded PDF (researcher+admin)
+  POST /ingest/pubmed            → ingest PubMed record by PMID (researcher+admin)
+  POST /ingest/doi               → ingest paper by DOI via CrossRef (researcher+admin)
+  POST /chat                     → RAG chat with structured response (all authenticated)
+  GET  /notes                    → list vault notes for sidebar (all authenticated)
+  GET  /notes/<name>             → fetch note content (all authenticated)
+  GET  /api/notes                → list all notes with full metadata (all authenticated)
+  GET  /api/notes/<id>           → get single note content + metadata (all authenticated)
+  PUT  /api/notes/<id>           → update note content (researcher+admin)
+  DELETE /api/notes/<id>         → delete note (admin only)
+  POST /api/notes/<id>/reindex   → re-embed a single note (researcher+admin)
+  POST /index                    → regenerate INDEX.md (admin only)
+  GET  /activity                 → last 50 activity log entries (all authenticated)
+  GET/POST /auth/login           → login page
+  GET/POST /auth/register        → register page
+  GET  /auth/logout              → logout
 """
 
 import datetime
@@ -35,7 +40,7 @@ from groq import Groq
 from auth import auth_bp
 from config import GROQ_API_KEY, MODEL, VAULT_PATH, VAULT_WIKI_PATH
 from database import ActivityLog, Base, ChatMessage, Note, SessionLocal, User, engine
-from embed import build_index, query_index
+from embed import build_index, query_index, reindex_note
 from extensions import bcrypt, login_manager
 from ingest import ingest_doi, ingest_pdf, ingest_pubmed, ingest_topic, ingest_url, write_note
 
@@ -57,6 +62,27 @@ except Exception as _db_init_err:
     print(f"[db] Warning: could not create tables: {_db_init_err}")
 
 ACTIVITY_LOG = os.path.join(VAULT_PATH, "activity_log.json")
+
+CHAT_SYSTEM = (
+    "You are a medical research assistant. You summarise research evidence only. "
+    "You do not give medical advice. Always state uncertainty. Never make clinical recommendations.\n\n"
+    "Answer ONLY from the provided wiki context. If the answer is not in the context, say so clearly.\n\n"
+    "Format your response exactly as follows (use these exact bold headers):\n\n"
+    "**Answer:**\n"
+    "[direct answer here]\n\n"
+    "**Evidence from the vault:**\n"
+    "[what the notes say, with specific details]\n\n"
+    "**Conflicting or uncertain findings:**\n"
+    "[any contradictions, gaps, or areas of uncertainty]\n\n"
+    "**Limitations:**\n"
+    "[key limitations of the evidence]\n\n"
+    "**Suggested next questions:**\n"
+    "1. [follow-up question]\n"
+    "2. [follow-up question]\n"
+    "3. [follow-up question]\n\n"
+    "**Sources used:**\n"
+    "[list the note filenames you drew from]"
+)
 
 
 # ── auth helpers ──────────────────────────────────────────────────────────────
@@ -152,6 +178,38 @@ def _log(action: str, detail: str, note_written: str | None = None) -> None:
         db.close()
     except Exception as _db_err:
         print(f"[db] _log write failed: {_db_err}")
+
+
+def _parse_frontmatter(content: str) -> dict:
+    """Parse YAML frontmatter block from a note. Returns {} if absent."""
+    if not content.startswith("---\n"):
+        return {}
+    end = content.find("\n---\n", 4)
+    if end == -1:
+        return {}
+    result = {}
+    for line in content[4:end].split("\n"):
+        if ":" not in line:
+            continue
+        key, _, raw = line.partition(":")
+        key = key.strip()
+        raw = raw.strip()
+        if not key:
+            continue
+        if raw.startswith("[") and raw.endswith("]"):
+            inner = raw[1:-1].strip()
+            if not inner:
+                result[key] = []
+            else:
+                items = re.findall(r'"([^"]*)"', inner)
+                result[key] = items if items else [x.strip() for x in inner.split(",") if x.strip()]
+        elif raw == "null":
+            result[key] = ""
+        elif raw.startswith('"') and raw.endswith('"'):
+            result[key] = raw[1:-1].replace('\\"', '"').replace("\\\\", "\\")
+        else:
+            result[key] = raw
+    return result
 
 
 def get_suggestions(context: str) -> list:
@@ -332,22 +390,20 @@ def route_chat():
     try:
         build_index()
 
-        chunks = query_index(message, n_results=5)
+        # Fetch top-20, rescore, return best 7
+        chunks = query_index(message)
         sources = sorted({c["source"] for c in chunks})
 
         context = (
-            "\n\n---\n\n".join(f"[{c['source']}]\n{c['text']}" for c in chunks)
+            "\n\n---\n\n".join(
+                f"[{c['source']}{'  §' + c['section'] if c.get('section') else ''}]\n{c['text']}"
+                for c in chunks
+            )
             if chunks
             else "No relevant context found in the wiki."
         )
 
-        system = (
-            "You are a precise assistant that answers questions using only the "
-            "provided wiki context. If the answer is not present in the context, "
-            "say so clearly. Cite the source file(s) at the end of your answer."
-        )
-
-        messages = [{"role": "system", "content": system}]
+        messages = [{"role": "system", "content": CHAT_SYSTEM}]
         messages.extend(history)
         messages.append({
             "role": "user",
@@ -401,6 +457,135 @@ def route_note(filename):
         return jsonify({"error": "Note not found"}), 404
     with open(path, encoding="utf-8") as f:
         return jsonify({"content": f.read()})
+
+
+# ── API: notes CRUD + reindex ─────────────────────────────────────────────────
+
+@app.route("/api/notes")
+@login_required
+def api_notes_list():
+    try:
+        files = sorted(f for f in os.listdir(VAULT_WIKI_PATH) if f.endswith(".md"))
+        try:
+            db = SessionLocal()
+            db_notes = {n.filename: n for n in db.query(Note).all()}
+            db.close()
+        except Exception:
+            db_notes = {}
+
+        notes = []
+        for f in files:
+            path = os.path.join(VAULT_WIKI_PATH, f)
+            with open(path, encoding="utf-8") as fp:
+                content = fp.read()
+            fm = _parse_frontmatter(content)
+            db_n = db_notes.get(f)
+            mtime = datetime.datetime.utcfromtimestamp(os.path.getmtime(path))
+            word_count = len(content.split())
+            notes.append({
+                "id": f,
+                "filename": f,
+                "title": fm.get("title") or f.replace(".md", "").replace("_", " "),
+                "source_type": fm.get("source_type") or (db_n.source_type if db_n else "wiki"),
+                "source_url": fm.get("source_url", ""),
+                "doi": fm.get("doi", ""),
+                "pmid": fm.get("pmid", ""),
+                "authors": fm.get("authors") or [],
+                "journal": fm.get("journal", ""),
+                "year": fm.get("year", ""),
+                "biomarkers": fm.get("biomarkers") or [],
+                "conditions": fm.get("conditions") or [],
+                "created_by": fm.get("created_by") or (db_n.created_by if db_n else ""),
+                "created_at": (
+                    db_n.created_at.isoformat() + "Z"
+                    if db_n and db_n.created_at
+                    else mtime.isoformat() + "Z"
+                ),
+                "word_count": word_count,
+                "modified": mtime.isoformat() + "Z",
+            })
+        return jsonify({"notes": notes})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/notes/<path:note_id>")
+@login_required
+def api_note_get(note_id):
+    safe = os.path.basename(note_id)
+    path = os.path.join(VAULT_WIKI_PATH, safe)
+    if not os.path.isfile(path):
+        return jsonify({"error": "Note not found"}), 404
+    with open(path, encoding="utf-8") as f:
+        content = f.read()
+    fm = _parse_frontmatter(content)
+    return jsonify({"id": safe, "filename": safe, "content": content, **fm})
+
+
+@app.route("/api/notes/<path:note_id>", methods=["PUT"])
+@login_required
+@require_role("researcher", "admin")
+def api_note_update(note_id):
+    safe = os.path.basename(note_id)
+    path = os.path.join(VAULT_WIKI_PATH, safe)
+    if not os.path.isfile(path):
+        return jsonify({"error": "Note not found"}), 404
+    data = request.get_json(force=True)
+    content = data.get("content", "")
+    if not content.strip():
+        return jsonify({"error": "content is required"}), 400
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
+    word_count = len(content.split())
+    try:
+        db = SessionLocal()
+        n = db.query(Note).filter_by(filename=safe).first()
+        if n:
+            n.word_count = str(word_count)
+            db.commit()
+        db.close()
+    except Exception:
+        pass
+    _log("edit_note", safe)
+    return jsonify({"success": True, "word_count": word_count})
+
+
+@app.route("/api/notes/<path:note_id>", methods=["DELETE"])
+@login_required
+@require_role("admin")
+def api_note_delete(note_id):
+    safe = os.path.basename(note_id)
+    path = os.path.join(VAULT_WIKI_PATH, safe)
+    if not os.path.isfile(path):
+        return jsonify({"error": "Note not found"}), 404
+    os.remove(path)
+    try:
+        db = SessionLocal()
+        db.query(Note).filter_by(filename=safe).delete()
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+    # purge from chroma (reindex_note handles missing file gracefully)
+    try:
+        reindex_note(safe)
+    except Exception:
+        pass
+    _log("delete_note", safe)
+    return jsonify({"success": True})
+
+
+@app.route("/api/notes/<path:note_id>/reindex", methods=["POST"])
+@login_required
+@require_role("researcher", "admin")
+def api_note_reindex(note_id):
+    safe = os.path.basename(note_id)
+    path = os.path.join(VAULT_WIKI_PATH, safe)
+    if not os.path.isfile(path):
+        return jsonify({"error": "Note not found"}), 404
+    reindex_note(safe)
+    _log("reindex_note", safe)
+    return jsonify({"success": True})
 
 
 # ── index regeneration ────────────────────────────────────────────────────────
