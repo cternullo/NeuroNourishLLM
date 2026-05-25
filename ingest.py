@@ -25,6 +25,18 @@ SYSTEM_PROMPT = (
 )
 
 
+MAX_WORDS = 3000
+
+
+def chunk_text(text: str, max_words: int = MAX_WORDS) -> list:
+    """Split *text* into chunks of at most *max_words* words."""
+    words = text.split()
+    return [
+        " ".join(words[i : i + max_words])
+        for i in range(0, len(words), max_words)
+    ]
+
+
 def _llm_to_markdown(raw_content: str) -> str:
     """Send raw text to Groq and return the structured Markdown response."""
     response = client.chat.completions.create(
@@ -35,6 +47,32 @@ def _llm_to_markdown(raw_content: str) -> str:
         ],
     )
     return response.choices[0].message.content
+
+
+def _llm_to_markdown_chunked(raw_content: str, source_label: str) -> tuple[str, int]:
+    """
+    Process *raw_content* through Groq, chunking if it exceeds MAX_WORDS.
+    Returns (markdown_string, chunk_count).
+
+    - Single chunk: passes directly to Groq, returns its output unchanged.
+    - Multiple chunks: processes each chunk separately and combines the
+      results under ## Part N headings beneath a shared title block.
+    """
+    chunks = chunk_text(raw_content)
+
+    if len(chunks) == 1:
+        return _llm_to_markdown(f"Source: {source_label}\n\n{raw_content}"), 1
+
+    parts = []
+    for i, chunk in enumerate(chunks, start=1):
+        print(f"  chunk {i}/{len(chunks)} ({len(chunk.split())} words)…")
+        result = _llm_to_markdown(
+            f"Source: {source_label} (part {i} of {len(chunks)})\n\n{chunk}"
+        )
+        parts.append(f"## Part {i}\n\n{result}")
+
+    combined = "\n\n---\n\n".join(parts)
+    return combined, len(chunks)
 
 
 def _to_snake_case(text: str) -> str:
@@ -96,14 +134,14 @@ def ingest_topic(topic: str) -> str:
     if not raw.strip():
         raise ValueError(f"Empty Wikipedia extract for: {topic}")
 
-    print(f"[ingest_topic] Raw content fetched ({len(raw.split())} words). Sending to Groq…")
-    markdown = _llm_to_markdown(f"Source: Wikipedia – {topic}\n\n{raw}")
+    word_count_raw = len(raw.split())
+    print(f"[ingest_topic] Raw content fetched ({word_count_raw} words). Sending to Groq…")
+    markdown, n_chunks = _llm_to_markdown_chunked(raw, f"Wikipedia – {topic}")
 
     filename = _to_snake_case(topic) + ".md"
     path = write_note(markdown, filename)
 
-    word_count = len(markdown.split())
-    print(f"[ingest_topic] Written → {path}  ({word_count} words)")
+    print(f"[ingest_topic] Written → {path}  ({len(markdown.split())} words, {n_chunks} chunk(s))")
     return path
 
 
@@ -127,15 +165,14 @@ def ingest_url(url: str) -> str:
         raise ValueError("No usable paragraph text found at the given URL.")
 
     print(f"[ingest_url] Extracted {len(raw.split())} words. Sending to Groq…")
-    markdown = _llm_to_markdown(f"Source: {url}\n\n{raw}")
+    markdown, n_chunks = _llm_to_markdown_chunked(raw, url)
 
     # Build a safe filename from the URL path
     slug = _to_snake_case(re.sub(r"https?://", "", url)[:80])
     filename = slug + ".md"
     path = write_note(markdown, filename)
 
-    word_count = len(markdown.split())
-    print(f"[ingest_url] Written → {path}  ({word_count} words)")
+    print(f"[ingest_url] Written → {path}  ({len(markdown.split())} words, {n_chunks} chunk(s))")
     return path
 
 
@@ -162,14 +199,13 @@ def ingest_pdf(pdf_path: str) -> str:
         raise ValueError("No extractable text found in the PDF.")
 
     print(f"[ingest_pdf] Extracted {len(raw.split())} words. Sending to Groq…")
-    markdown = _llm_to_markdown(f"Source: {os.path.basename(pdf_path)}\n\n{raw}")
+    markdown, n_chunks = _llm_to_markdown_chunked(raw, os.path.basename(pdf_path))
 
     pdf_stem = _to_snake_case(os.path.splitext(os.path.basename(pdf_path))[0])
     filename = pdf_stem + ".md"
     path = write_note(markdown, filename)
 
-    word_count = len(markdown.split())
-    print(f"[ingest_pdf] Written → {path}  ({word_count} words)")
+    print(f"[ingest_pdf] Written → {path}  ({len(markdown.split())} words, {n_chunks} chunk(s))")
     return path
 
 
