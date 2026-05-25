@@ -38,6 +38,23 @@ For your vault path:
 - Mac: /Users/yourname/NeuroNourishLLM
 - Windows: C:\Users\yourname\NeuroNourishLLM
 
+### Optional: PostgreSQL (for shared team activity log)
+Add `DATABASE_URL` to your `.env` if you want activity logs stored in a 
+shared database instead of just the local JSON file:
+
+```
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+```
+
+**SQLite fallback:** If `DATABASE_URL` is not set, the app automatically 
+uses `local.db` in the project directory. No setup needed for local use.
+`local.db` is excluded from git — each person has their own local copy.
+
+After setting `DATABASE_URL`, initialise the tables once:
+```bash
+python init_db.py
+```
+
 ## Step 4 — Open as Obsidian Vault
 1. Open Obsidian
 2. Click Open folder as vault

@@ -7,3 +7,7 @@ sentence-transformers
 chromadb
 flask
 flask-cors
+sqlalchemy
+psycopg2-binary
+flask-sqlalchemy
+alembic

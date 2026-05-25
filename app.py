@@ -19,12 +19,14 @@ import os
 import re
 import shutil
 import tempfile
+import uuid
 
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 from groq import Groq
 
 from config import GROQ_API_KEY, MODEL, VAULT_PATH, VAULT_WIKI_PATH
+from database import ActivityLog, Base, ChatMessage, SessionLocal, engine
 from embed import build_index, query_index
 from ingest import ingest_pdf, ingest_topic, ingest_url, write_note
 
@@ -32,6 +34,11 @@ app = Flask(__name__)
 CORS(app)
 
 client = Groq(api_key=GROQ_API_KEY)
+
+try:
+    Base.metadata.create_all(engine)
+except Exception as _db_init_err:
+    print(f"[db] Warning: could not create tables: {_db_init_err}")
 
 ACTIVITY_LOG = os.path.join(VAULT_PATH, "activity_log.json")
 
@@ -44,16 +51,34 @@ def _word_count(path: str) -> int:
 
 
 def _log(action: str, detail: str, note_written: str | None = None) -> None:
+    user = request.headers.get("X-Username", "anonymous")
+    now = datetime.datetime.utcnow()
     entry = {
-        "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
-        "user": request.headers.get("X-Username", "anonymous"),
+        "timestamp": now.isoformat() + "Z",
+        "user": user,
         "action": action,
         "detail": detail,
         "note_written": note_written,
     }
+    # JSON file (for git sync)
     os.makedirs(os.path.dirname(ACTIVITY_LOG), exist_ok=True)
     with open(ACTIVITY_LOG, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry) + "\n")
+    # Database (wrapped so a DB failure never breaks the request)
+    try:
+        db = SessionLocal()
+        db.add(ActivityLog(
+            id=str(uuid.uuid4()),
+            timestamp=now,
+            user=user,
+            action=action,
+            detail=detail,
+            note_written=note_written,
+        ))
+        db.commit()
+        db.close()
+    except Exception as _db_err:
+        print(f"[db] _log write failed: {_db_err}")
 
 
 def get_suggestions(context: str) -> list:
@@ -275,19 +300,41 @@ def route_index():
 
 @app.route("/activity")
 def route_activity():
-    if not os.path.exists(ACTIVITY_LOG):
-        return jsonify({"activity": []})
-    with open(ACTIVITY_LOG, encoding="utf-8") as f:
-        lines = [l.strip() for l in f if l.strip()]
-    entries = []
-    for line in lines[-50:]:
-        try:
-            entries.append(json.loads(line))
-        except json.JSONDecodeError:
-            pass
-    # Newest first so the frontend can slice [:20] directly
-    entries.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
-    return jsonify({"activity": entries})
+    try:
+        db = SessionLocal()
+        rows = (
+            db.query(ActivityLog)
+            .order_by(ActivityLog.timestamp.desc())
+            .limit(50)
+            .all()
+        )
+        db.close()
+        entries = [
+            {
+                "timestamp": r.timestamp.isoformat() + "Z",
+                "user": r.user,
+                "action": r.action,
+                "detail": r.detail,
+                "note_written": r.note_written,
+            }
+            for r in rows
+        ]
+        return jsonify({"activity": entries})
+    except Exception as _db_err:
+        print(f"[db] /activity fallback to JSON: {_db_err}")
+        # JSON file fallback
+        if not os.path.exists(ACTIVITY_LOG):
+            return jsonify({"activity": []})
+        with open(ACTIVITY_LOG, encoding="utf-8") as f:
+            lines = [l.strip() for l in f if l.strip()]
+        entries = []
+        for line in lines[-50:]:
+            try:
+                entries.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+        entries.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
+        return jsonify({"activity": entries})
 
 
 # ── run ───────────────────────────────────────────────────────────────────────
