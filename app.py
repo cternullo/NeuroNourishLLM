@@ -16,6 +16,7 @@ Routes:
 import datetime
 import json
 import os
+import re
 import shutil
 import tempfile
 
@@ -55,6 +56,34 @@ def _log(action: str, detail: str, note_written: str | None = None) -> None:
         f.write(json.dumps(entry) + "\n")
 
 
+def get_suggestions(context: str) -> list:
+    """Ask Groq for 3 related research directions based on *context*.
+    Returns a list of up to 3 strings; returns [] if Groq fails or JSON is malformed."""
+    try:
+        resp = client.chat.completions.create(
+            model=MODEL,
+            messages=[{
+                "role": "user",
+                "content": (
+                    "Based on this content, suggest exactly 3 specific research "
+                    "topics or questions this person should explore next. "
+                    'Return only a JSON array of 3 short strings, nothing else. '
+                    'Example: ["Topic A", "Topic B", "Topic C"]\n\n'
+                    + context[:2000]
+                ),
+            }],
+        )
+        raw = resp.choices[0].message.content.strip()
+        # Strip markdown code fences Groq sometimes wraps around JSON output
+        raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw, flags=re.MULTILINE).strip()
+        parsed = json.loads(raw)
+        if isinstance(parsed, list):
+            return [str(s) for s in parsed[:3]]
+        return []
+    except Exception:
+        return []
+
+
 # ── main page ─────────────────────────────────────────────────────────────────
 
 @app.route("/")
@@ -73,8 +102,12 @@ def route_ingest_topic():
     try:
         path = ingest_topic(topic)
         filename = os.path.basename(path)
+        with open(path, encoding="utf-8") as f:
+            note = f.read()
+        suggestions = get_suggestions(note)
         _log("ingest_topic", topic, filename)
-        return jsonify({"success": True, "filename": filename, "word_count": _word_count(path)})
+        return jsonify({"success": True, "filename": filename,
+                        "word_count": len(note.split()), "suggestions": suggestions})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -88,8 +121,12 @@ def route_ingest_url():
     try:
         path = ingest_url(url)
         filename = os.path.basename(path)
+        with open(path, encoding="utf-8") as f:
+            note = f.read()
+        suggestions = get_suggestions(note)
         _log("ingest_url", url, filename)
-        return jsonify({"success": True, "filename": filename, "word_count": _word_count(path)})
+        return jsonify({"success": True, "filename": filename,
+                        "word_count": len(note.split()), "suggestions": suggestions})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -109,8 +146,12 @@ def route_ingest_pdf():
         file.save(tmp_path)
         path = ingest_pdf(tmp_path)
         filename = os.path.basename(path)
+        with open(path, encoding="utf-8") as f:
+            note = f.read()
+        suggestions = get_suggestions(note)
         _log("ingest_pdf", file.filename, filename)
-        return jsonify({"success": True, "filename": filename, "word_count": _word_count(path)})
+        return jsonify({"success": True, "filename": filename,
+                        "word_count": len(note.split()), "suggestions": suggestions})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
     finally:
@@ -157,9 +198,10 @@ def route_chat():
 
         resp = client.chat.completions.create(model=MODEL, messages=messages)
         answer = resp.choices[0].message.content
+        suggestions = get_suggestions(answer)
 
         _log("chat", message)
-        return jsonify({"response": answer, "sources": sources})
+        return jsonify({"response": answer, "sources": sources, "suggestions": suggestions})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -234,7 +276,7 @@ def route_index():
 @app.route("/activity")
 def route_activity():
     if not os.path.exists(ACTIVITY_LOG):
-        return jsonify({"entries": []})
+        return jsonify({"activity": []})
     with open(ACTIVITY_LOG, encoding="utf-8") as f:
         lines = [l.strip() for l in f if l.strip()]
     entries = []
@@ -243,7 +285,9 @@ def route_activity():
             entries.append(json.loads(line))
         except json.JSONDecodeError:
             pass
-    return jsonify({"entries": entries})
+    # Newest first so the frontend can slice [:20] directly
+    entries.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
+    return jsonify({"activity": entries})
 
 
 # ── run ───────────────────────────────────────────────────────────────────────

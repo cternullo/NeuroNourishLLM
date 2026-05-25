@@ -1,2 +1,3 @@
 {"timestamp": "2026-05-22T12:14:14.883300Z", "user": "test-user", "action": "ingest_topic", "detail": "Triglycerides", "note_written": "triglycerides.md"}
 {"timestamp": "2026-05-22T12:15:02.591170Z", "user": "test-user", "action": "chat", "detail": "How do triglycerides relate to cardiovascular risk?", "note_written": null}
+{"timestamp": "2026-05-25T15:35:56.848091Z", "user": "tester", "action": "ingest_topic", "detail": "Omega-3 fatty acids", "note_written": "omega_3_fatty_acids.md"}

@@ -120,12 +120,72 @@ input[type="file"] { padding: 5px 7px; color: var(--text-muted); font-size: 11px
 .note-name { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 .note-date { font-size: 10px; color: var(--text-muted); }
 
-/* ── Activity ────────────────────────────────────────────────── */
+/* ── Activity (Team) ─────────────────────────────────────────── */
 
-.activity-list { display: flex; flex-direction: column; gap: 7px; }
-.act-item { display: flex; flex-direction: column; gap: 1px; }
-.act-action { font-size: 11px; color: var(--text); }
-.act-meta   { font-size: 10px; color: var(--text-muted); }
+.activity-header {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+}
+.act-toggle {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 12px; cursor: pointer; padding: 0; line-height: 1;
+}
+.activity-list {
+  display: flex; flex-direction: column; gap: 9px;
+  max-height: 240px; overflow-y: auto; margin-top: 8px;
+}
+.activity-list::-webkit-scrollbar { width: 3px; }
+.activity-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.act-item   { display: flex; flex-direction: column; gap: 2px; }
+.act-user   { font-size: 11px; font-weight: 700; color: var(--text); }
+.act-detail { font-size: 11px; color: var(--text-muted); }
+.act-time   { font-size: 10px; color: var(--text-muted); }
+
+/* Action type badges */
+.badge {
+  display: inline-block; padding: 1px 6px; border-radius: 3px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
+  margin-right: 4px; vertical-align: middle;
+}
+.badge-topic { background: #162040; color: #5b9cf6; }
+.badge-url   { background: #261640; color: #9b7de8; }
+.badge-pdf   { background: #301a08; color: #e8943b; }
+.badge-chat  { background: #0a2018; color: var(--success); }
+
+/* Pulsing dot shown when a new entry appears since last refresh */
+.pulse-dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--success); margin-left: 6px; vertical-align: middle;
+  animation: pulse-green 2s ease-in-out infinite;
+}
+@keyframes pulse-green {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1.1); }
+}
+
+/* ── Suggestion chips ────────────────────────────────────────── */
+
+.suggest-wrap { margin-top: 8px; }
+.suggest-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.7px;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;
+}
+.chip-row { display: flex; flex-wrap: wrap; gap: 5px; animation: chip-in 0.35s ease; }
+@keyframes chip-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
+  border-radius: 20px; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text-muted); font-size: 11px; font-family: var(--font);
+  cursor: pointer; transition: all 0.15s; white-space: nowrap; line-height: 1.4;
+}
+.chip:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent-h); }
+.chip-arrow { color: var(--accent); font-style: normal; }
+
+/* "Not you?" link beside the username badge */
+.not-you {
+  font-size: 10px; color: var(--text-muted); text-decoration: none; cursor: pointer;
+}
+.not-you:hover { color: var(--text); text-decoration: underline; }
 
 /* ── Chat panel ──────────────────────────────────────────────── */
 
@@ -310,7 +370,7 @@ input[type="file"] { padding: 5px 7px; color: var(--text-muted); font-size: 11px
 <body>
 
 <!-- ── Username modal ─────────────────────────────────────── -->
-<div class="overlay" id="username-overlay">
+<div class="overlay hidden" id="username-overlay">
   <div class="modal username-modal">
     <div class="modal-body">
       <div class="icon">🧠</div>
@@ -376,6 +436,8 @@ input[type="file"] { padding: 5px 7px; color: var(--text-muted); font-size: 11px
         </div>
 
         <div id="ingest-status" class="status"></div>
+        <!-- Suggestion chips rendered here after each successful ingest -->
+        <div id="ingest-suggestions"></div>
       </div>
 
       <!-- Vault notes -->
@@ -389,9 +451,16 @@ input[type="file"] { padding: 5px 7px; color: var(--text-muted); font-size: 11px
         </div>
       </div>
 
-      <!-- Activity -->
+      <!-- Team Activity -->
       <div class="s-section">
-        <div class="s-label">Recent Activity</div>
+        <div class="activity-header" onclick="toggleActivity()">
+          <div class="s-label" style="margin:0">
+            Team Activity
+            <span class="pulse-dot hidden" id="activity-dot"></span>
+          </div>
+          <button class="act-toggle" id="act-chevron">▾</button>
+        </div>
+        <!-- Scrollable list of last 20 entries, newest first -->
         <div class="activity-list" id="activity-list">
           <div style="font-size:11px;color:var(--text-muted)">Loading…</div>
         </div>
@@ -406,6 +475,7 @@ input[type="file"] { padding: 5px 7px; color: var(--text-muted); font-size: 11px
     <div class="chat-head">
       <span class="chat-head-title">Ask your wiki</span>
       <span class="username-badge" id="username-display">—</span>
+      <a class="not-you" id="not-you-link" href="#">Not you?</a>
     </div>
 
     <div class="messages" id="messages">
@@ -446,9 +516,22 @@ function initUsername() {
   if (stored) {
     applyUsername(stored);
   } else {
+    // No name found — reveal the modal (it starts hidden)
+    document.getElementById('username-overlay').classList.remove('hidden');
     setTimeout(() => document.getElementById('username-input').focus(), 80);
   }
 }
+
+// Clear stored name and reload so the user can enter a new one
+function clearUser() {
+  localStorage.removeItem('nn_username');
+  location.reload();
+}
+
+document.getElementById('not-you-link').addEventListener('click', e => {
+  e.preventDefault();
+  clearUser();
+});
 
 document.getElementById('username-submit').addEventListener('click', () => {
   const v = document.getElementById('username-input').value.trim();
@@ -516,10 +599,12 @@ async function ingestTopic() {
       showStatus(`✓ ${d.filename}  (${d.word_count} words)`, 'ok');
       document.getElementById('topic-input').value = '';
       loadNotes();
+      showIngestSuggestions(d.suggestions || []);
     } else {
       showStatus('Error: ' + d.error, 'err');
+      showIngestSuggestions([]);
     }
-  } catch (e) { showStatus('Error: ' + e.message, 'err'); }
+  } catch (e) { showStatus('Error: ' + e.message, 'err'); showIngestSuggestions([]); }
   setBusy('topic-btn', 'Ingest', false);
 }
 
@@ -544,10 +629,12 @@ async function ingestUrl() {
       showStatus(`✓ ${d.filename}  (${d.word_count} words)`, 'ok');
       document.getElementById('url-input').value = '';
       loadNotes();
+      showIngestSuggestions(d.suggestions || []);
     } else {
       showStatus('Error: ' + d.error, 'err');
+      showIngestSuggestions([]);
     }
-  } catch (e) { showStatus('Error: ' + e.message, 'err'); }
+  } catch (e) { showStatus('Error: ' + e.message, 'err'); showIngestSuggestions([]); }
   setBusy('url-btn', 'Ingest', false);
 }
 
@@ -575,10 +662,12 @@ document.getElementById('pdf-btn').addEventListener('click', async () => {
       showStatus(`✓ ${d.filename}  (${d.word_count} words)`, 'ok');
       fi.value = '';
       loadNotes();
+      showIngestSuggestions(d.suggestions || []);
     } else {
       showStatus('Error: ' + d.error, 'err');
+      showIngestSuggestions([]);
     }
-  } catch (e) { showStatus('Error: ' + e.message, 'err'); }
+  } catch (e) { showStatus('Error: ' + e.message, 'err'); showIngestSuggestions([]); }
   setBusy('pdf-btn', 'Upload', false);
 });
 
@@ -616,6 +705,32 @@ async function loadNotes() {
 }
 
 document.getElementById('refresh-btn').addEventListener('click', loadNotes);
+
+// ─────────────────────────────────────────────────────────────
+// Ingest suggestion chips
+// ─────────────────────────────────────────────────────────────
+function showIngestSuggestions(suggestions) {
+  const container = document.getElementById('ingest-suggestions');
+  if (!suggestions.length) { container.innerHTML = ''; return; }
+  container.innerHTML = `
+    <div class="suggest-wrap">
+      <div class="suggest-label">Where to go next</div>
+      <div class="chip-row">${suggestions.map(s =>
+        `<button class="chip" data-topic="${esc(s)}"><em class="chip-arrow">→</em> ${esc(s)}</button>`
+      ).join('')}</div>
+    </div>`;
+  // Clicking a chip switches to the Topic tab and pre-fills the input
+  container.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelector('[data-tab="topic"]').classList.add('active');
+      document.getElementById('tab-topic').classList.add('active');
+      document.getElementById('topic-input').value = chip.dataset.topic;
+      document.getElementById('topic-input').focus();
+    });
+  });
+}
 
 // ─────────────────────────────────────────────────────────────
 // Note viewer modal
@@ -700,14 +815,14 @@ async function sendChat() {
       body: JSON.stringify({ message: msg, history: chatHistory }),
     });
     loader.remove();
-    addAssistantBubble(d.response || '(no response)', d.sources || []);
+    addAssistantBubble(d.response || '(no response)', d.sources || [], d.suggestions || []);
 
     // Store plain text in history — context is re-injected server-side each turn
     chatHistory.push({ role: 'user',      content: msg });
     chatHistory.push({ role: 'assistant', content: d.response });
   } catch (e) {
     loader.remove();
-    addAssistantBubble('Error: ' + e.message, []);
+    addAssistantBubble('Error: ' + e.message, [], []);
   }
 
   input.disabled = false;
@@ -723,7 +838,7 @@ function addUserBubble(text) {
   scrollBottom();
 }
 
-function addAssistantBubble(text, sources) {
+function addAssistantBubble(text, sources, suggestions = []) {
   const div = document.createElement('div');
   div.className = 'msg assistant';
 
@@ -733,12 +848,29 @@ function addAssistantBubble(text, sources) {
       }</div>`
     : '';
 
-  div.innerHTML = `<div class="bubble">${mdToHtml(text)}</div>${srcs}`;
+  // Suggestion chips that send themselves as a new chat message when clicked
+  const chips = suggestions.length
+    ? `<div class="suggest-wrap" style="margin-top:10px">
+        <div class="suggest-label">Explore next</div>
+        <div class="chip-row">${suggestions.map(s =>
+          `<button class="chip chat-chip" data-query="${esc(s)}"><em class="chip-arrow">→</em> ${esc(s)}</button>`
+        ).join('')}</div>
+      </div>`
+    : '';
 
-  // Wire source links to open the note modal
+  div.innerHTML = `<div class="bubble">${mdToHtml(text)}</div>${srcs}${chips}`;
+
   div.querySelectorAll('.src-link').forEach(el =>
     el.addEventListener('click', () => openNote(el.dataset.file))
   );
+
+  // Each chat chip pre-fills and submits the chat input
+  div.querySelectorAll('.chat-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.getElementById('chat-input').value = chip.dataset.query;
+      sendChat();
+    });
+  });
 
   document.getElementById('messages').appendChild(div);
   scrollBottom();
@@ -764,35 +896,69 @@ document.getElementById('chat-input').addEventListener('keydown', e => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// Activity
+// Team Activity
 // ─────────────────────────────────────────────────────────────
-const ACT_LABELS = {
-  ingest_topic: '📥 Topic',
-  ingest_url:   '🔗 URL',
-  ingest_pdf:   '📄 PDF',
-  chat:         '💬 Chat',
-};
-
 function trunc(s, n) { return s && s.length > n ? s.slice(0, n) + '…' : (s || ''); }
+
+// Timestamp of the newest entry seen on the last load (for new-entry detection)
+let lastActivityTs = null;
+
+const BADGE_CLASS = { ingest_topic:'badge-topic', ingest_url:'badge-url', ingest_pdf:'badge-pdf', chat:'badge-chat' };
+const BADGE_LABEL = { ingest_topic:'Topic',       ingest_url:'URL',       ingest_pdf:'PDF',       chat:'Chat'       };
+
+// Human-readable relative timestamps
+function relTime(iso) {
+  const diff = (Date.now() - new Date(iso)) / 1000;
+  if (diff < 60)     return 'just now';
+  if (diff < 3600)   { const m = Math.floor(diff / 60);   return m + ' min'  + (m  > 1 ? 's' : '') + ' ago'; }
+  if (diff < 86400)  { const h = Math.floor(diff / 3600); return h + ' hour' + (h  > 1 ? 's' : '') + ' ago'; }
+  if (diff < 172800) return 'Yesterday';
+  return new Date(iso).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+}
 
 async function loadActivity() {
   const list = document.getElementById('activity-list');
   try {
     const d = await api('/activity');
-    const entries = (d.entries || []).slice(-5).reverse();
+    // Server already returns newest-first; show up to 20
+    const entries = (d.activity || []).slice(0, 20);
+
+    // Show pulsing dot if a newer entry appeared since last poll
+    if (entries.length) {
+      if (lastActivityTs && entries[0].timestamp > lastActivityTs)
+        document.getElementById('activity-dot').classList.remove('hidden');
+      lastActivityTs = entries[0].timestamp;
+    }
+
     if (!entries.length) {
       list.innerHTML = '<div style="font-size:11px;color:var(--text-muted)">No activity yet</div>';
       return;
     }
+
     list.innerHTML = entries.map(e => `
       <div class="act-item">
-        <span class="act-action">${ACT_LABELS[e.action] || e.action} — ${esc(trunc(e.detail, 26))}</span>
-        <span class="act-meta">${esc(e.user)} · ${fmtDate(e.timestamp)}</span>
+        <div>
+          <span class="badge ${BADGE_CLASS[e.action] || ''}">${BADGE_LABEL[e.action] || e.action}</span>
+          <span class="act-user">${esc(e.user)}</span>
+        </div>
+        <div class="act-detail">${esc(trunc(e.detail, 40))}</div>
+        <div class="act-time">${relTime(e.timestamp)}</div>
       </div>`).join('');
   } catch (_) {}
 }
 
-setInterval(loadActivity, 30000);
+// Collapse/expand the Team Activity panel; clears the new-entry dot on expand
+function toggleActivity() {
+  const body = document.getElementById('activity-list');
+  const chevron = document.getElementById('act-chevron');
+  const isHidden = body.style.display === 'none';
+  body.style.display = isHidden ? '' : 'none';
+  chevron.textContent = isHidden ? '▾' : '▸';
+  if (isHidden) document.getElementById('activity-dot').classList.add('hidden');
+}
+
+// Refresh every 60 seconds
+setInterval(loadActivity, 60000);
 
 // ─────────────────────────────────────────────────────────────
 // Utilities
