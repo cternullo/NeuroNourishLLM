@@ -6,6 +6,7 @@ Falls back to SQLite (local.db) when DATABASE_URL is not set.
 
 import os
 
+from flask_login import UserMixin
 from sqlalchemy import Column, DateTime, String, Text, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.sql import func
@@ -27,12 +28,18 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 Base = declarative_base()
 
 
-class User(Base):
+class User(UserMixin, Base):
     __tablename__ = "users"
 
     username = Column(String(120), primary_key=True)
+    email = Column(String(200), nullable=True)
+    password_hash = Column(String(255), nullable=True)
+    role = Column(String(20), default="researcher")
     first_seen = Column(DateTime(timezone=True), server_default=func.now())
     last_seen = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+
+    def get_id(self):
+        return self.username
 
 
 class Note(Base):

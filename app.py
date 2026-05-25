@@ -1,16 +1,19 @@
 """
-NeuroNourish Flask server — Phase 3
+NeuroNourish Flask server — Phase 4
 
 Routes:
-  GET  /                → serve index.html
-  POST /ingest/topic    → ingest Wikipedia topic
-  POST /ingest/url      → ingest URL
-  POST /ingest/pdf      → ingest uploaded PDF
-  POST /chat            → RAG chat with conversation history
-  GET  /notes           → list vault notes
-  GET  /notes/<name>    → fetch note content
-  POST /index           → regenerate INDEX.md
-  GET  /activity        → last 50 activity log entries
+  GET  /                → serve index.html (login required)
+  POST /ingest/topic    → ingest Wikipedia topic (researcher+admin)
+  POST /ingest/url      → ingest URL (researcher+admin)
+  POST /ingest/pdf      → ingest uploaded PDF (researcher+admin)
+  POST /chat            → RAG chat (all authenticated)
+  GET  /notes           → list vault notes (all authenticated)
+  GET  /notes/<name>    → fetch note content (all authenticated)
+  POST /index           → regenerate INDEX.md (admin only)
+  GET  /activity        → last 50 activity log entries (all authenticated)
+  GET/POST /auth/login  → login page
+  GET/POST /auth/register → register page
+  GET  /auth/logout     → logout
 """
 
 import datetime
@@ -20,18 +23,29 @@ import re
 import shutil
 import tempfile
 import uuid
+from functools import wraps
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask_cors import CORS
+from flask_login import current_user, login_required
 from groq import Groq
 
+from auth import auth_bp
 from config import GROQ_API_KEY, MODEL, VAULT_PATH, VAULT_WIKI_PATH
-from database import ActivityLog, Base, ChatMessage, SessionLocal, engine
+from database import ActivityLog, Base, ChatMessage, Note, SessionLocal, User, engine
 from embed import build_index, query_index
+from extensions import bcrypt, login_manager
 from ingest import ingest_pdf, ingest_topic, ingest_url, write_note
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
 CORS(app)
+
+bcrypt.init_app(app)
+login_manager.init_app(app)
+login_manager.login_view = "auth.login"
+
+app.register_blueprint(auth_bp)
 
 client = Groq(api_key=GROQ_API_KEY)
 
@@ -43,15 +57,74 @@ except Exception as _db_init_err:
 ACTIVITY_LOG = os.path.join(VAULT_PATH, "activity_log.json")
 
 
+# ── auth helpers ──────────────────────────────────────────────────────────────
+
+@login_manager.user_loader
+def load_user(username):
+    db = SessionLocal()
+    user = db.query(User).filter_by(username=username).first()
+    db.close()
+    return user
+
+
+def require_role(*roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return jsonify({"error": "Authentication required"}), 401
+            if current_user.role not in roles:
+                return jsonify({"error": "Insufficient permissions"}), 403
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
+
+
+def _create_default_admin():
+    admin_username = os.environ.get("DEFAULT_ADMIN_USERNAME")
+    admin_password = os.environ.get("DEFAULT_ADMIN_PASSWORD")
+    try:
+        db = SessionLocal()
+        if db.query(User).count() == 0:
+            if not admin_username or not admin_password:
+                print(
+                    "[auth] WARNING: No users exist. Set DEFAULT_ADMIN_USERNAME and "
+                    "DEFAULT_ADMIN_PASSWORD env vars to auto-create an admin account."
+                )
+            else:
+                pw_hash = bcrypt.generate_password_hash(admin_password).decode("utf-8")
+                db.add(User(username=admin_username, password_hash=pw_hash, role="admin"))
+                db.commit()
+                print(f"[auth] Default admin created: {admin_username}")
+        db.close()
+    except Exception as e:
+        print(f"[auth] Could not create default admin: {e}")
+
+
 # ── helpers ──────────────────────────────────────────────────────────────────
 
-def _word_count(path: str) -> int:
-    with open(path, encoding="utf-8") as f:
-        return len(f.read().split())
+def _upsert_note(filename, source_type, source_ref, word_count, created_by):
+    try:
+        db = SessionLocal()
+        n = db.query(Note).filter_by(filename=filename).first()
+        if n:
+            n.source_type = source_type
+            n.source_ref = source_ref
+            n.word_count = str(word_count)
+        else:
+            db.add(Note(
+                filename=filename, source_type=source_type,
+                source_ref=source_ref, word_count=str(word_count),
+                created_by=created_by,
+            ))
+        db.commit()
+        db.close()
+    except Exception:
+        pass
 
 
 def _log(action: str, detail: str, note_written: str | None = None) -> None:
-    user = request.headers.get("X-Username", "anonymous")
+    user = current_user.username if current_user.is_authenticated else "anonymous"
     now = datetime.datetime.utcnow()
     entry = {
         "timestamp": now.isoformat() + "Z",
@@ -60,11 +133,9 @@ def _log(action: str, detail: str, note_written: str | None = None) -> None:
         "detail": detail,
         "note_written": note_written,
     }
-    # JSON file (for git sync)
     os.makedirs(os.path.dirname(ACTIVITY_LOG), exist_ok=True)
     with open(ACTIVITY_LOG, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry) + "\n")
-    # Database (wrapped so a DB failure never breaks the request)
     try:
         db = SessionLocal()
         db.add(ActivityLog(
@@ -82,8 +153,6 @@ def _log(action: str, detail: str, note_written: str | None = None) -> None:
 
 
 def get_suggestions(context: str) -> list:
-    """Ask Groq for 3 related research directions based on *context*.
-    Returns a list of up to 3 strings; returns [] if Groq fails or JSON is malformed."""
     try:
         resp = client.chat.completions.create(
             model=MODEL,
@@ -99,7 +168,6 @@ def get_suggestions(context: str) -> list:
             }],
         )
         raw = resp.choices[0].message.content.strip()
-        # Strip markdown code fences Groq sometimes wraps around JSON output
         raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw, flags=re.MULTILINE).strip()
         parsed = json.loads(raw)
         if isinstance(parsed, list):
@@ -112,13 +180,18 @@ def get_suggestions(context: str) -> list:
 # ── main page ─────────────────────────────────────────────────────────────────
 
 @app.route("/")
+@login_required
 def index():
-    return render_template("index.html")
+    return render_template("index.html",
+                           username=current_user.username,
+                           role=current_user.role)
 
 
 # ── ingest routes ─────────────────────────────────────────────────────────────
 
 @app.route("/ingest/topic", methods=["POST"])
+@login_required
+@require_role("researcher", "admin")
 def route_ingest_topic():
     data = request.get_json(force=True)
     topic = (data.get("topic") or "").strip()
@@ -129,15 +202,19 @@ def route_ingest_topic():
         filename = os.path.basename(path)
         with open(path, encoding="utf-8") as f:
             note = f.read()
+        word_count = len(note.split())
         suggestions = get_suggestions(note)
+        _upsert_note(filename, "topic", topic, word_count, current_user.username)
         _log("ingest_topic", topic, filename)
         return jsonify({"success": True, "filename": filename,
-                        "word_count": len(note.split()), "suggestions": suggestions})
+                        "word_count": word_count, "suggestions": suggestions})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route("/ingest/url", methods=["POST"])
+@login_required
+@require_role("researcher", "admin")
 def route_ingest_url():
     data = request.get_json(force=True)
     url = (data.get("url") or "").strip()
@@ -148,15 +225,19 @@ def route_ingest_url():
         filename = os.path.basename(path)
         with open(path, encoding="utf-8") as f:
             note = f.read()
+        word_count = len(note.split())
         suggestions = get_suggestions(note)
+        _upsert_note(filename, "url", url, word_count, current_user.username)
         _log("ingest_url", url, filename)
         return jsonify({"success": True, "filename": filename,
-                        "word_count": len(note.split()), "suggestions": suggestions})
+                        "word_count": word_count, "suggestions": suggestions})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route("/ingest/pdf", methods=["POST"])
+@login_required
+@require_role("researcher", "admin")
 def route_ingest_pdf():
     if "file" not in request.files:
         return jsonify({"success": False, "error": "No file provided"}), 400
@@ -164,7 +245,6 @@ def route_ingest_pdf():
     if not file.filename.lower().endswith(".pdf"):
         return jsonify({"success": False, "error": "File must be a PDF"}), 400
 
-    # Preserve original filename so ingest_pdf derives a clean note name
     tmp_dir = tempfile.mkdtemp()
     tmp_path = os.path.join(tmp_dir, file.filename)
     try:
@@ -173,10 +253,12 @@ def route_ingest_pdf():
         filename = os.path.basename(path)
         with open(path, encoding="utf-8") as f:
             note = f.read()
+        word_count = len(note.split())
         suggestions = get_suggestions(note)
+        _upsert_note(filename, "pdf", file.filename, word_count, current_user.username)
         _log("ingest_pdf", file.filename, filename)
         return jsonify({"success": True, "filename": filename,
-                        "word_count": len(note.split()), "suggestions": suggestions})
+                        "word_count": word_count, "suggestions": suggestions})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
     finally:
@@ -186,16 +268,16 @@ def route_ingest_pdf():
 # ── chat ──────────────────────────────────────────────────────────────────────
 
 @app.route("/chat", methods=["POST"])
+@login_required
 def route_chat():
     data = request.get_json(force=True)
     message = (data.get("message") or "").strip()
-    history = data.get("history", [])  # [{role, content}, ...]
+    history = data.get("history", [])
 
     if not message:
         return jsonify({"error": "message is required"}), 400
 
     try:
-        # Keep index fresh (incremental — only re-embeds changed notes)
         build_index()
 
         chunks = query_index(message, n_results=5)
@@ -213,7 +295,6 @@ def route_chat():
             "say so clearly. Cite the source file(s) at the end of your answer."
         )
 
-        # Inject fresh context only on the current user turn; prior history is plain
         messages = [{"role": "system", "content": system}]
         messages.extend(history)
         messages.append({
@@ -235,22 +316,33 @@ def route_chat():
 # ── notes ─────────────────────────────────────────────────────────────────────
 
 @app.route("/notes")
+@login_required
 def route_notes():
     try:
         files = sorted(f for f in os.listdir(VAULT_WIKI_PATH) if f.endswith(".md"))
+        try:
+            db = SessionLocal()
+            note_types = {n.filename: n.source_type for n in db.query(Note).all()}
+            db.close()
+        except Exception:
+            note_types = {}
         notes = []
         for f in files:
             path = os.path.join(VAULT_WIKI_PATH, f)
             mtime = datetime.datetime.utcfromtimestamp(os.path.getmtime(path))
-            notes.append({"filename": f, "modified": mtime.isoformat() + "Z"})
+            notes.append({
+                "filename": f,
+                "modified": mtime.isoformat() + "Z",
+                "source_type": note_types.get(f, "wiki"),
+            })
         return jsonify({"notes": notes})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
 @app.route("/notes/<filename>")
+@login_required
 def route_note(filename):
-    # Guard against path traversal
     safe = os.path.basename(filename)
     path = os.path.join(VAULT_WIKI_PATH, safe)
     if not os.path.isfile(path):
@@ -262,6 +354,8 @@ def route_note(filename):
 # ── index regeneration ────────────────────────────────────────────────────────
 
 @app.route("/index", methods=["POST"])
+@login_required
+@require_role("admin")
 def route_index():
     try:
         md_files = sorted(
@@ -299,6 +393,7 @@ def route_index():
 # ── activity log ──────────────────────────────────────────────────────────────
 
 @app.route("/activity")
+@login_required
 def route_activity():
     try:
         db = SessionLocal()
@@ -322,7 +417,6 @@ def route_activity():
         return jsonify({"activity": entries})
     except Exception as _db_err:
         print(f"[db] /activity fallback to JSON: {_db_err}")
-        # JSON file fallback
         if not os.path.exists(ACTIVITY_LOG):
             return jsonify({"activity": []})
         with open(ACTIVITY_LOG, encoding="utf-8") as f:
@@ -340,5 +434,6 @@ def route_activity():
 # ── run ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    _create_default_admin()
     print("\n  NeuroNourish running at http://localhost:5001\n")
     app.run(debug=True, host="0.0.0.0", port=5001, use_reloader=False)

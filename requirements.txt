@@ -11,3 +11,5 @@ sqlalchemy
 psycopg2-binary
 flask-sqlalchemy
 alembic
+flask-login
+flask-bcrypt
