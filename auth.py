@@ -17,10 +17,11 @@ def login():
         password = request.form.get("password", "")
         db = SessionLocal()
         user = db.query(User).filter_by(username=username).first()
-        db.close()
         if user and user.password_hash and bcrypt.check_password_hash(user.password_hash, password):
             login_user(user, remember=True)
+            db.close()
             return redirect(url_for("index"))
+        db.close()
         error = "Invalid username or password."
     return render_template("login.html", error=error)
 
@@ -53,8 +54,8 @@ def register():
                 )
                 db.add(user)
                 db.commit()
-                db.close()
                 login_user(user, remember=True)
+                db.close()
                 return redirect(url_for("index"))
     return render_template("register.html", error=error)
 
