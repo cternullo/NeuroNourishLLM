@@ -132,11 +132,13 @@ html, body {
   font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
   flex-shrink: 0;
 }
-.badge-topic { background: #162040; color: #5b9cf6; }
-.badge-url   { background: #261640; color: #9b7de8; }
-.badge-pdf   { background: #301a08; color: #e8943b; }
-.badge-wiki  { background: #1e1e28; color: #606080; }
-.badge-chat  { background: #0a2018; color: var(--success); }
+.badge-topic  { background: #162040; color: #5b9cf6; }
+.badge-url    { background: #261640; color: #9b7de8; }
+.badge-pdf    { background: #301a08; color: #e8943b; }
+.badge-wiki   { background: #1e1e28; color: #606080; }
+.badge-chat   { background: #0a2018; color: var(--success); }
+.badge-pubmed { background: #0a2030; color: #4db8e8; }
+.badge-doi    { background: #1a2810; color: #6dc87a; }
 
 .list-placeholder { font-size: 11px; color: var(--text-muted); padding: 2px 0; }
 
@@ -624,7 +626,8 @@ html, body {
               <button class="ingest-tab active" data-ingest="topic">Topic</button>
               <button class="ingest-tab" data-ingest="url">URL</button>
               <button class="ingest-tab" data-ingest="pdf">PDF</button>
-              <button class="ingest-tab coming-soon" disabled>PubMed/DOI<span class="soon-tag">soon</span></button>
+              <button class="ingest-tab" data-ingest="pubmed">PubMed</button>
+              <button class="ingest-tab" data-ingest="doi">DOI</button>
             </div>
 
             <!-- Topic pane -->
@@ -652,6 +655,22 @@ html, body {
               </div>
               <div id="pdf-progress" class="helper hidden"></div>
               <button class="btn btn-primary full-btn" id="pdf-btn">Upload &amp; Ingest</button>
+            </div>
+
+            <!-- PubMed pane -->
+            <div class="ingest-pane" id="ingest-pubmed">
+              <input type="text" class="full-input" id="pmid-input"
+                     placeholder="e.g. 36357676" autocomplete="off">
+              <button class="btn btn-primary full-btn" id="pmid-btn">Ingest</button>
+              <div class="helper">Fetches abstract and metadata from PubMed by PMID</div>
+            </div>
+
+            <!-- DOI pane -->
+            <div class="ingest-pane" id="ingest-doi">
+              <input type="text" class="full-input" id="doi-input"
+                     placeholder="e.g. 10.1016/j.cell.2021.01.001" autocomplete="off">
+              <button class="btn btn-primary full-btn" id="doi-btn">Ingest</button>
+              <div class="helper">Fetches metadata from CrossRef by DOI</div>
             </div>
 
             <div id="ingest-status" class="status hidden"></div>
@@ -716,6 +735,8 @@ function relTime(iso) {
 // Markdown → HTML
 // ─────────────────────────────────────────────────────────────
 function mdToHtml(md) {
+  // Strip YAML frontmatter before rendering
+  md = md.replace(/^---\n[\s\S]*?\n---\n?/, '');
   const blocks = [];
   md = md.replace(/```[\w]*\n?([\s\S]*?)```/g, (_, code) => {
     blocks.push(`<pre><code>${escHtml(code.trim())}</code></pre>`);
@@ -935,6 +956,70 @@ document.getElementById('pdf-btn')?.addEventListener('click', async () => {
 });
 
 // ─────────────────────────────────────────────────────────────
+// Ingest — PubMed
+// ─────────────────────────────────────────────────────────────
+async function ingestPubmed() {
+  const val = document.getElementById('pmid-input').value.trim();
+  if (!val) return;
+  setBusy('pmid-btn', 'Ingest', true);
+  showStatus('Fetching from PubMed…', '');
+  try {
+    const d = await apiFetch('/ingest/pubmed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pmid: val }),
+    });
+    if (d.success) {
+      showStatus(`✓ ${d.filename}  (${d.word_count} words)`, 'ok');
+      document.getElementById('pmid-input').value = '';
+      loadNotes();
+      showSuggestionCards(d.suggestions || []);
+    } else {
+      showStatus('Error: ' + d.error, 'err');
+      hideSuggestions();
+    }
+  } catch (e) { showStatus('Error: ' + e.message, 'err'); hideSuggestions(); }
+  setBusy('pmid-btn', 'Ingest', false);
+}
+
+document.getElementById('pmid-btn')?.addEventListener('click', ingestPubmed);
+document.getElementById('pmid-input')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') ingestPubmed();
+});
+
+// ─────────────────────────────────────────────────────────────
+// Ingest — DOI
+// ─────────────────────────────────────────────────────────────
+async function ingestDoi() {
+  const val = document.getElementById('doi-input').value.trim();
+  if (!val) return;
+  setBusy('doi-btn', 'Ingest', true);
+  showStatus('Fetching from CrossRef…', '');
+  try {
+    const d = await apiFetch('/ingest/doi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ doi: val }),
+    });
+    if (d.success) {
+      showStatus(`✓ ${d.filename}  (${d.word_count} words)`, 'ok');
+      document.getElementById('doi-input').value = '';
+      loadNotes();
+      showSuggestionCards(d.suggestions || []);
+    } else {
+      showStatus('Error: ' + d.error, 'err');
+      hideSuggestions();
+    }
+  } catch (e) { showStatus('Error: ' + e.message, 'err'); hideSuggestions(); }
+  setBusy('doi-btn', 'Ingest', false);
+}
+
+document.getElementById('doi-btn')?.addEventListener('click', ingestDoi);
+document.getElementById('doi-input')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') ingestDoi();
+});
+
+// ─────────────────────────────────────────────────────────────
 // Suggestion cards
 // ─────────────────────────────────────────────────────────────
 function showSuggestionCards(suggestions) {
@@ -981,10 +1066,12 @@ function hideSuggestions() {
 // Notes list
 // ─────────────────────────────────────────────────────────────
 const TYPE_BADGE = {
-  topic: '<span class="badge badge-topic">Wiki</span>',
-  url:   '<span class="badge badge-url">URL</span>',
-  pdf:   '<span class="badge badge-pdf">PDF</span>',
-  wiki:  '<span class="badge badge-wiki">Wiki</span>',
+  topic:  '<span class="badge badge-topic">Wiki</span>',
+  url:    '<span class="badge badge-url">URL</span>',
+  pdf:    '<span class="badge badge-pdf">PDF</span>',
+  pubmed: '<span class="badge badge-pubmed">PubMed</span>',
+  doi:    '<span class="badge badge-doi">DOI</span>',
+  wiki:   '<span class="badge badge-wiki">Wiki</span>',
 };
 
 function fmtDate(iso) {
@@ -1049,12 +1136,14 @@ document.getElementById('note-overlay').addEventListener('click', e => {
 // Team Activity
 // ─────────────────────────────────────────────────────────────
 const BADGE_CLASS = {
-  ingest_topic: 'badge-topic', ingest_url: 'badge-url',
-  ingest_pdf: 'badge-pdf',     chat: 'badge-chat',
+  ingest_topic:  'badge-topic',  ingest_url:    'badge-url',
+  ingest_pdf:    'badge-pdf',    chat:          'badge-chat',
+  ingest_pubmed: 'badge-pubmed', ingest_doi:    'badge-doi',
 };
 const BADGE_LABEL = {
-  ingest_topic: 'Topic', ingest_url: 'URL',
-  ingest_pdf: 'PDF',     chat: 'Chat',
+  ingest_topic:  'Topic',  ingest_url:    'URL',
+  ingest_pdf:    'PDF',    chat:          'Chat',
+  ingest_pubmed: 'PubMed', ingest_doi:    'DOI',
 };
 
 async function loadActivity() {

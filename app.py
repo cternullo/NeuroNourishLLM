@@ -1,19 +1,21 @@
 """
-NeuroNourish Flask server — Phase 4
+NeuroNourish Flask server — Phase 5
 
 Routes:
-  GET  /                → serve index.html (login required)
-  POST /ingest/topic    → ingest Wikipedia topic (researcher+admin)
-  POST /ingest/url      → ingest URL (researcher+admin)
-  POST /ingest/pdf      → ingest uploaded PDF (researcher+admin)
-  POST /chat            → RAG chat (all authenticated)
-  GET  /notes           → list vault notes (all authenticated)
-  GET  /notes/<name>    → fetch note content (all authenticated)
-  POST /index           → regenerate INDEX.md (admin only)
-  GET  /activity        → last 50 activity log entries (all authenticated)
-  GET/POST /auth/login  → login page
-  GET/POST /auth/register → register page
-  GET  /auth/logout     → logout
+  GET  /                    → serve index.html (login required)
+  POST /ingest/topic        → ingest Wikipedia topic (researcher+admin)
+  POST /ingest/url          → ingest URL (researcher+admin)
+  POST /ingest/pdf          → ingest uploaded PDF (researcher+admin)
+  POST /ingest/pubmed       → ingest PubMed record by PMID (researcher+admin)
+  POST /ingest/doi          → ingest paper by DOI via CrossRef (researcher+admin)
+  POST /chat                → RAG chat (all authenticated)
+  GET  /notes               → list vault notes (all authenticated)
+  GET  /notes/<name>        → fetch note content (all authenticated)
+  POST /index               → regenerate INDEX.md (admin only)
+  GET  /activity            → last 50 activity log entries (all authenticated)
+  GET/POST /auth/login      → login page
+  GET/POST /auth/register   → register page
+  GET  /auth/logout         → logout
 """
 
 import datetime
@@ -35,7 +37,7 @@ from config import GROQ_API_KEY, MODEL, VAULT_PATH, VAULT_WIKI_PATH
 from database import ActivityLog, Base, ChatMessage, Note, SessionLocal, User, engine
 from embed import build_index, query_index
 from extensions import bcrypt, login_manager
-from ingest import ingest_pdf, ingest_topic, ingest_url, write_note
+from ingest import ingest_doi, ingest_pdf, ingest_pubmed, ingest_topic, ingest_url, write_note
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
@@ -198,7 +200,7 @@ def route_ingest_topic():
     if not topic:
         return jsonify({"success": False, "error": "topic is required"}), 400
     try:
-        path = ingest_topic(topic)
+        path = ingest_topic(topic, created_by=current_user.username)
         filename = os.path.basename(path)
         with open(path, encoding="utf-8") as f:
             note = f.read()
@@ -221,7 +223,7 @@ def route_ingest_url():
     if not url:
         return jsonify({"success": False, "error": "url is required"}), 400
     try:
-        path = ingest_url(url)
+        path = ingest_url(url, created_by=current_user.username)
         filename = os.path.basename(path)
         with open(path, encoding="utf-8") as f:
             note = f.read()
@@ -249,7 +251,7 @@ def route_ingest_pdf():
     tmp_path = os.path.join(tmp_dir, file.filename)
     try:
         file.save(tmp_path)
-        path = ingest_pdf(tmp_path)
+        path = ingest_pdf(tmp_path, created_by=current_user.username)
         filename = os.path.basename(path)
         with open(path, encoding="utf-8") as f:
             note = f.read()
@@ -263,6 +265,56 @@ def route_ingest_pdf():
         return jsonify({"success": False, "error": str(e)}), 500
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+# ── pubmed / doi ingest ───────────────────────────────────────────────────────
+
+@app.route("/ingest/pubmed", methods=["POST"])
+@login_required
+@require_role("researcher", "admin")
+def route_ingest_pubmed():
+    data = request.get_json(force=True)
+    pmid = (data.get("pmid") or "").strip()
+    if not pmid:
+        return jsonify({"success": False, "error": "pmid is required"}), 400
+    try:
+        path = ingest_pubmed(pmid, created_by=current_user.username)
+        filename = os.path.basename(path)
+        with open(path, encoding="utf-8") as f:
+            note = f.read()
+        word_count = len(note.split())
+        suggestions = get_suggestions(note)
+        _upsert_note(filename, "pubmed", f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
+                     word_count, current_user.username)
+        _log("ingest_pubmed", f"PMID:{pmid}", filename)
+        return jsonify({"success": True, "filename": filename,
+                        "word_count": word_count, "suggestions": suggestions})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/ingest/doi", methods=["POST"])
+@login_required
+@require_role("researcher", "admin")
+def route_ingest_doi():
+    data = request.get_json(force=True)
+    doi = (data.get("doi") or "").strip()
+    if not doi:
+        return jsonify({"success": False, "error": "doi is required"}), 400
+    try:
+        path = ingest_doi(doi, created_by=current_user.username)
+        filename = os.path.basename(path)
+        with open(path, encoding="utf-8") as f:
+            note = f.read()
+        word_count = len(note.split())
+        suggestions = get_suggestions(note)
+        _upsert_note(filename, "doi", f"https://doi.org/{doi}",
+                     word_count, current_user.username)
+        _log("ingest_doi", f"DOI:{doi}", filename)
+        return jsonify({"success": True, "filename": filename,
+                        "word_count": word_count, "suggestions": suggestions})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 # ── chat ──────────────────────────────────────────────────────────────────────

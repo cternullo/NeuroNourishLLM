@@ -13,3 +13,4 @@ flask-sqlalchemy
 alembic
 flask-login
 flask-bcrypt
+biopython
