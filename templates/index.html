@@ -753,6 +753,145 @@ html, body {
 .help-req-by { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
 
 .source-card.team-source { background: var(--accent-dim); border-color: var(--accent); color: var(--accent-h); }
+
+/* ── Outreach panel ──────────────────────────────────────────── */
+
+.outreach-gmail-banner {
+  padding: 10px 20px; font-size: 12px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.outreach-gmail-banner.connected {
+  background: #0a2018; color: var(--success);
+}
+.outreach-gmail-banner.disconnected {
+  background: #1a1600; color: #e8c040;
+}
+.outreach-gmail-banner.error { background: #1a0a0a; color: var(--error); }
+.gmail-banner-text { flex: 1; }
+.gmail-banner-link {
+  font-size: 11px; color: inherit; text-decoration: underline; cursor: pointer;
+  background: none; border: none; font-family: var(--font); opacity: 0.8;
+}
+.gmail-banner-link:hover { opacity: 1; }
+
+.outreach-layout { display: flex; height: 100%; overflow: hidden; flex: 1; min-height: 0; }
+
+.outreach-left {
+  width: 50%; min-width: 320px; flex-shrink: 0; overflow-y: auto;
+  border-right: 1px solid var(--border); display: flex; flex-direction: column;
+}
+.outreach-left::-webkit-scrollbar { width: 5px; }
+.outreach-left::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.outreach-section { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.outreach-section:last-child { border-bottom: none; flex: 1; }
+.outreach-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.outreach-section-title {
+  font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: -0.2px;
+}
+
+.outreach-search-row { display: flex; gap: 8px; }
+.outreach-search-input {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 9px 14px; color: var(--text);
+  font-size: 13px; outline: none; transition: border-color 0.15s; font-family: var(--font);
+}
+.outreach-search-input:focus { border-color: var(--accent); }
+
+.paper-results-list { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+.paper-card {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 13px 15px;
+}
+.paper-card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; line-height: 1.4; }
+.paper-card-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 7px; }
+.paper-card-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; align-items: center; }
+.badge-pmid  { background: #0a2030; color: #4db8e8; }
+.badge-doi   { background: #1a2810; color: #6dc87a; }
+.badge-email-found { background: #0a2018; color: var(--success); }
+.badge-email-none  { background: var(--surface3); color: var(--text-muted); }
+.paper-card-abstract {
+  font-size: 11px; color: var(--text-muted); line-height: 1.5;
+  max-height: 60px; overflow: hidden; transition: max-height 0.2s; cursor: pointer;
+}
+.paper-card-abstract.expanded { max-height: 300px; }
+.paper-card-footer { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.abstract-toggle { font-size: 10px; color: var(--accent-h); cursor: pointer; background: none; border: none; font-family: var(--font); padding: 0; }
+
+.outreach-draft-list { display: flex; flex-direction: column; gap: 6px; }
+.outreach-draft-item {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 7px;
+  padding: 10px 13px; cursor: pointer; transition: border-color 0.15s; display: flex; gap: 10px; align-items: flex-start;
+}
+.outreach-draft-item:hover { border-color: var(--accent); }
+.outreach-draft-item.selected { border-color: var(--accent); background: var(--accent-dim); }
+.outreach-draft-info { flex: 1; min-width: 0; }
+.outreach-draft-author { font-size: 12px; font-weight: 600; color: var(--text); }
+.outreach-draft-paper { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.outreach-draft-time  { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.badge-status-draft { background: #1a1200; color: #e8c040; }
+.badge-status-sent  { background: #0a2018; color: var(--success); }
+
+.outreach-right {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0;
+}
+.outreach-editor-empty {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 13px; text-align: center;
+}
+.outreach-editor { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+.outreach-editor.visible { display: flex; }
+
+.outreach-editor-head {
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.outreach-editor-author { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.outreach-editor-paper { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+.outreach-editor-body {
+  flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;
+}
+.outreach-editor-body::-webkit-scrollbar { width: 5px; }
+.outreach-editor-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.outreach-field-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; display: block; }
+.outreach-subject-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 9px 12px; color: var(--text);
+  font-size: 13px; font-family: var(--font); outline: none; transition: border-color 0.15s;
+}
+.outreach-subject-input:focus { border-color: var(--accent); }
+.outreach-body-textarea {
+  width: 100%; flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 11px 12px; color: var(--text);
+  font-size: 13px; font-family: var(--font); line-height: 1.65;
+  resize: none; min-height: 220px; outline: none; transition: border-color 0.15s;
+}
+.outreach-body-textarea:focus { border-color: var(--accent); }
+.outreach-word-count { font-size: 10px; color: var(--text-muted); text-align: right; }
+.outreach-to-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 9px 12px; color: var(--text);
+  font-size: 13px; font-family: var(--font); outline: none; transition: border-color 0.15s;
+}
+.outreach-to-input:focus { border-color: var(--accent); }
+.outreach-editor-foot {
+  padding: 12px 20px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap;
+}
+.outreach-editor-status { font-size: 11px; color: var(--text-muted); flex: 1; }
+
+@media (max-width: 768px) {
+  .outreach-layout { flex-direction: column; }
+  .outreach-left { width: 100%; min-width: 0; border-right: none; border-bottom: 1px solid var(--border); max-height: 55%; }
+  .outreach-right { flex: 1; min-height: 0; }
+  .outreach-editor-body { padding: 12px 14px; }
+  .outreach-editor-head { padding: 10px 14px; }
+  .outreach-editor-foot { padding: 10px 14px; }
+}
 </style>
 </head>
 <body>
@@ -775,6 +914,21 @@ html, body {
       <button class="btn btn-primary btn-sm" id="modal-save-btn">Save changes</button>
       <button class="btn btn-sm btn-ghost" id="modal-cancel-btn">Cancel</button>
       <span class="modal-save-status hidden" id="modal-save-status"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Send email confirmation modal -->
+<div class="overlay hidden" id="send-confirm-overlay">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head">
+      <h2>Confirm Send</h2>
+      <button class="modal-x" id="send-confirm-close">&times;</button>
+    </div>
+    <div class="modal-body" id="send-confirm-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-primary btn-sm" id="send-confirm-yes">Send Email</button>
+      <button class="btn btn-sm btn-ghost" id="send-confirm-no">Cancel</button>
     </div>
   </div>
 </div>
@@ -856,6 +1010,9 @@ html, body {
       <button class="main-tab{% if role == 'viewer' %} active{% endif %}" data-panel="chat">Chat</button>
       <button class="main-tab" data-panel="vault">Vault</button>
       <button class="main-tab" data-panel="team">Team Notes<span class="tab-badge hidden" id="team-tab-badge"></span></button>
+      {% if role != 'viewer' %}
+      <button class="main-tab" data-panel="outreach">Outreach</button>
+      {% endif %}
     </nav>
 
     <div class="panels">
@@ -978,6 +1135,60 @@ html, body {
           <div class="vault-loading">Loading notes…</div>
         </div>
       </div>
+
+      <!-- ── OUTREACH PANEL ────────────────────────────────────── -->
+      {% if role != 'viewer' %}
+      <div class="panel" id="panel-outreach" style="flex-direction:column">
+        <!-- Gmail status banner -->
+        <div class="outreach-gmail-banner disconnected" id="outreach-gmail-banner">
+          <span class="gmail-banner-text">Loading Gmail status…</span>
+        </div>
+
+        <div class="outreach-layout">
+
+          <!-- Left column: search + results + drafts -->
+          <div class="outreach-left">
+
+            <!-- Search -->
+            <div class="outreach-section">
+              <div class="outreach-section-head">
+                <span class="outreach-section-title">Find Researchers</span>
+              </div>
+              <div class="outreach-search-row">
+                <input type="text" id="outreach-search-input" class="outreach-search-input"
+                       placeholder="Search a research topic…" autocomplete="off">
+                <button class="btn btn-primary btn-sm" id="outreach-search-btn">Find Papers</button>
+              </div>
+              <div id="outreach-results" class="paper-results-list"></div>
+            </div>
+
+            <!-- Drafts -->
+            <div class="outreach-section">
+              <div class="outreach-section-head">
+                <span class="outreach-section-title">Email Drafts</span>
+                <button class="icon-btn" id="refresh-drafts" title="Refresh">↻</button>
+              </div>
+              <div id="outreach-drafts-list" class="outreach-draft-list">
+                <div class="list-placeholder">No drafts yet</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right column: email editor -->
+          <div class="outreach-right">
+            <div class="outreach-editor-empty" id="outreach-editor-empty">
+              <div>
+                <div style="font-size:32px;margin-bottom:10px">✉</div>
+                <div>Click "Draft Email" on a paper to compose</div>
+              </div>
+            </div>
+            <div class="outreach-editor" id="outreach-editor"></div>
+          </div>
+
+        </div>
+      </div>
+      {% endif %}
 
       <!-- ── TEAM NOTES PANEL ───────────────────────────────────── -->
       <div class="panel" id="panel-team">
@@ -1132,6 +1343,10 @@ document.querySelectorAll('.main-tab').forEach(btn => {
     if (btn.dataset.panel === 'team') {
       markAllRead();
       if (!teamNotesLoaded) { loadTeamNotes(); teamNotesLoaded = true; }
+    }
+    if (btn.dataset.panel === 'outreach') {
+      loadGmailStatus();
+      loadDrafts();
     }
   });
 });
@@ -1704,6 +1919,7 @@ const BADGE_CLASS = {
   reindex_note:       'badge-wiki',   team_note_create:   'badge-chat',
   team_note_edit:     'badge-wiki',   team_note_delete:   'badge-wiki',
   team_note_comment:  'badge-chat',   team_note_resolve:  'badge-doi',
+  outreach_draft:     'badge-pubmed', outreach_sent:      'badge-doi',
 };
 const BADGE_LABEL = {
   ingest_topic:       'Topic',   ingest_url:         'URL',
@@ -1713,6 +1929,7 @@ const BADGE_LABEL = {
   reindex_note:       'Index',   team_note_create:   'Team',
   team_note_edit:     'Team',    team_note_delete:   'Team',
   team_note_comment:  'Comment', team_note_resolve:  'Resolved',
+  outreach_draft:     'Email',   outreach_sent:      'Sent',
 };
 
 async function loadActivity() {
@@ -2348,6 +2565,382 @@ document.getElementById('send-btn').addEventListener('click', sendChat);
 document.getElementById('chat-input').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) sendChat();
 });
+
+// ─────────────────────────────────────────────────────────────
+// Outreach — Gmail status
+// ─────────────────────────────────────────────────────────────
+let gmailConnected = false;
+let gmailEmail = '';
+let outreachPapers = [];
+let selectedDraftId = null;
+let currentDraftData = null;
+let pendingSendId = null;
+
+async function loadGmailStatus() {
+  const banner = document.getElementById('outreach-gmail-banner');
+  if (!banner) return;
+  try {
+    const d = await apiFetch('/auth/gmail/status');
+    gmailConnected = d.connected;
+    gmailEmail = d.email || '';
+    if (d.connected) {
+      banner.className = 'outreach-gmail-banner connected';
+      banner.innerHTML = `
+        <span class="gmail-banner-text">✓ Gmail connected: <strong>${esc(gmailEmail)}</strong></span>
+        <a href="/auth/gmail/disconnect" class="gmail-banner-link">Disconnect</a>`;
+    } else {
+      banner.className = 'outreach-gmail-banner disconnected';
+      banner.innerHTML = `
+        <span class="gmail-banner-text">⚠ Connect your Gmail account to send emails</span>
+        <a href="/auth/gmail" class="gmail-banner-link btn btn-sm btn-ghost" style="text-decoration:none">Connect Gmail</a>`;
+    }
+  } catch (_) {}
+}
+
+// Check URL params on load (OAuth callback redirects here)
+(function checkGmailParams() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('gmail_connected')) {
+    // Switch to outreach tab and show success
+    const tab = document.querySelector('[data-panel="outreach"]');
+    if (tab) tab.click();
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+  if (params.get('gmail_disconnected')) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+  if (params.get('gmail_error')) {
+    const banner = document.getElementById('outreach-gmail-banner');
+    if (banner) {
+      banner.className = 'outreach-gmail-banner error';
+      banner.innerHTML = `<span class="gmail-banner-text">Gmail error: ${esc(params.get('gmail_error'))}</span>`;
+    }
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+})();
+
+// ─────────────────────────────────────────────────────────────
+// Outreach — paper search
+// ─────────────────────────────────────────────────────────────
+async function searchPapers() {
+  const input = document.getElementById('outreach-search-input');
+  const topic = input?.value.trim();
+  if (!topic) return;
+  const btn = document.getElementById('outreach-search-btn');
+  const resultsEl = document.getElementById('outreach-results');
+  btn.disabled = true; btn.textContent = 'Searching…';
+  if (resultsEl) resultsEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0"><span class="spinner"></span> Searching PubMed and CrossRef…</div>';
+  try {
+    const d = await apiFetch('/api/outreach/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic, max_results: 10 }),
+    });
+    outreachPapers = d.papers || [];
+    renderPaperResults(outreachPapers, topic);
+  } catch (e) {
+    if (resultsEl) resultsEl.innerHTML = `<div style="color:var(--error);font-size:12px">${esc(e.message)}</div>`;
+  }
+  btn.disabled = false; btn.textContent = 'Find Papers';
+}
+
+function renderPaperResults(papers, topic) {
+  const el = document.getElementById('outreach-results');
+  if (!el) return;
+  if (!papers.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0">No papers found. Try a different topic.</div>'; return; }
+  el.innerHTML = papers.map((p, i) => {
+    const authorStr = p.authors.length
+      ? p.authors.slice(0, 3).join(', ') + (p.authors.length > 3 ? ' et al.' : '')
+      : 'Unknown authors';
+    const primaryAuthor = p.authors[0] || 'the author';
+    const pmidBadge = p.pmid ? `<span class="badge badge-pmid">PMID ${esc(p.pmid)}</span>` : '';
+    const doiBadge  = p.doi  ? `<span class="badge badge-doi">DOI</span>` : '';
+    const emailBadge = p.email
+      ? `<span class="badge badge-email-found">✓ ${esc(p.email)}</span>`
+      : `<span class="badge badge-email-none">Email not found</span>`;
+    return `
+      <div class="paper-card">
+        <div class="paper-card-title">${esc(p.title || '(no title)')}</div>
+        <div class="paper-card-meta">${esc(authorStr)} · ${esc(p.journal || '')} ${esc(p.year || '')}</div>
+        <div class="paper-card-badges">${pmidBadge}${doiBadge}${emailBadge}</div>
+        ${p.abstract ? `
+        <div class="paper-card-abstract" id="abstract-${i}">${esc(p.abstract)}</div>
+        <button class="abstract-toggle" data-idx="${i}">Show more ▾</button>` : ''}
+        <div class="paper-card-footer">
+          <button class="btn btn-sm btn-ghost draft-btn"
+            data-idx="${i}"
+            data-topic="${esc(topic)}"
+            data-author="${esc(primaryAuthor)}"
+            data-email="${esc(p.email || '')}"
+            data-title="${esc(p.title || '')}"
+            data-journal="${esc(p.journal || '')}"
+            data-year="${esc(p.year || '')}"
+            data-doi="${esc(p.doi || '')}"
+            data-pmid="${esc(p.pmid || '')}">
+            Draft Email
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+
+  el.querySelectorAll('.abstract-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ab = document.getElementById('abstract-' + btn.dataset.idx);
+      if (ab) {
+        ab.classList.toggle('expanded');
+        btn.textContent = ab.classList.contains('expanded') ? 'Show less ▴' : 'Show more ▾';
+      }
+    });
+  });
+
+  el.querySelectorAll('.draft-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.textContent = 'Drafting…';
+      try {
+        const d = await apiFetch('/api/outreach/draft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            author_name:  btn.dataset.author,
+            author_email: btn.dataset.email,
+            paper_title:  btn.dataset.title,
+            journal:      btn.dataset.journal,
+            year:         btn.dataset.year,
+            doi:          btn.dataset.doi,
+            pmid:         btn.dataset.pmid,
+            topic:        btn.dataset.topic,
+          }),
+        });
+        if (d.error) { alert('Draft failed: ' + d.error); btn.disabled = false; btn.textContent = 'Draft Email'; return; }
+        selectedDraftId = d.draft.id;
+        await loadDrafts();
+        openDraftEditor(d.draft);
+      } catch (e) { alert(e.message); }
+      btn.disabled = false; btn.textContent = 'Draft Email';
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// Outreach — drafts list
+// ─────────────────────────────────────────────────────────────
+async function loadDrafts() {
+  const list = document.getElementById('outreach-drafts-list');
+  try {
+    const d = await apiFetch('/api/outreach');
+    const drafts = d.drafts || [];
+    if (!drafts.length) {
+      if (list) list.innerHTML = '<div class="list-placeholder">No drafts yet</div>';
+      return;
+    }
+    if (list) list.innerHTML = drafts.map(dr => `
+      <div class="outreach-draft-item${dr.id === selectedDraftId ? ' selected' : ''}" data-id="${esc(dr.id)}">
+        <div class="outreach-draft-info">
+          <div class="outreach-draft-author">${esc(dr.author_name)}</div>
+          <div class="outreach-draft-paper">${esc(dr.paper_title)}</div>
+          <div class="outreach-draft-time">${relTime(dr.created_at)}</div>
+        </div>
+        <span class="badge badge-status-${dr.status === 'sent' ? 'sent' : 'draft'}">${dr.status === 'sent' ? 'Sent' : 'Draft'}</span>
+      </div>`).join('');
+    list.querySelectorAll('.outreach-draft-item').forEach(el => {
+      el.addEventListener('click', async () => {
+        selectedDraftId = el.dataset.id;
+        renderDraftList(drafts);
+        const full = drafts.find(d => d.id === el.dataset.id);
+        if (full) openDraftEditor(full);
+      });
+    });
+  } catch (_) {}
+}
+
+function renderDraftList(drafts) {
+  const list = document.getElementById('outreach-drafts-list');
+  if (!list) return;
+  list.querySelectorAll('.outreach-draft-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.id === selectedDraftId);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// Outreach — email editor
+// ─────────────────────────────────────────────────────────────
+function openDraftEditor(draft) {
+  currentDraftData = draft;
+  const editor = document.getElementById('outreach-editor');
+  const empty  = document.getElementById('outreach-editor-empty');
+  if (!editor) return;
+  empty.style.display = 'none';
+  editor.classList.add('visible');
+
+  const isSent = draft.status === 'sent';
+
+  editor.innerHTML = `
+    <div class="outreach-editor-head">
+      <div class="outreach-editor-author">To: ${esc(draft.author_name)}</div>
+      <div class="outreach-editor-paper">${esc(draft.paper_title)}</div>
+    </div>
+    <div class="outreach-editor-body">
+      <div>
+        <label class="outreach-field-label">Recipient Email</label>
+        <input type="email" class="outreach-to-input" id="editor-to"
+               value="${esc(draft.author_email || '')}"
+               placeholder="researcher@university.edu"
+               ${isSent ? 'disabled' : ''}>
+      </div>
+      <div>
+        <label class="outreach-field-label">Subject</label>
+        <input type="text" class="outreach-subject-input" id="editor-subject"
+               value="${esc(draft.subject || '')}"
+               ${isSent ? 'disabled' : ''}>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column">
+        <label class="outreach-field-label">Email Body</label>
+        <textarea class="outreach-body-textarea" id="editor-body"
+                  ${isSent ? 'disabled' : ''}>${esc(draft.body || '')}</textarea>
+        <div class="outreach-word-count" id="editor-wc">${countWords(draft.body || '')} words</div>
+      </div>
+    </div>
+    <div class="outreach-editor-foot">
+      ${!isSent ? `
+      <button class="btn btn-sm btn-ghost" id="editor-save-btn">Save Draft</button>
+      <button class="btn btn-sm btn-primary" id="editor-send-btn">Send Email</button>
+      <button class="btn btn-sm btn-danger" id="editor-delete-btn">Delete</button>
+      ` : '<span style="color:var(--success);font-size:12px">✓ Sent</span>'}
+      <span class="outreach-editor-status hidden" id="editor-status"></span>
+    </div>`;
+
+  const bodyTA = document.getElementById('editor-body');
+  bodyTA?.addEventListener('input', () => {
+    const wc = document.getElementById('editor-wc');
+    if (wc) {
+      const n = countWords(bodyTA.value);
+      wc.textContent = n + ' words';
+      wc.style.color = n > 200 ? 'var(--error)' : 'var(--text-muted)';
+    }
+  });
+
+  document.getElementById('editor-save-btn')?.addEventListener('click', saveDraft);
+  document.getElementById('editor-send-btn')?.addEventListener('click', () => showSendConfirm(draft.id));
+  document.getElementById('editor-delete-btn')?.addEventListener('click', () => deleteDraft(draft.id));
+}
+
+function countWords(text) {
+  return (text || '').trim().split(/\s+/).filter(Boolean).length;
+}
+
+async function saveDraft() {
+  if (!selectedDraftId) return;
+  const subject = document.getElementById('editor-subject')?.value || '';
+  const body    = document.getElementById('editor-body')?.value || '';
+  const to      = document.getElementById('editor-to')?.value || '';
+  const statusEl = document.getElementById('editor-status');
+  const saveBtn  = document.getElementById('editor-save-btn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+  try {
+    const d = await apiFetch(`/api/outreach/${selectedDraftId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject, body, author_email: to }),
+    });
+    if (d.success) {
+      currentDraftData = { ...currentDraftData, ...d.draft, subject, body, author_email: to };
+      if (statusEl) { statusEl.textContent = 'Saved'; statusEl.style.color = 'var(--success)'; statusEl.classList.remove('hidden'); setTimeout(() => statusEl.classList.add('hidden'), 2000); }
+      await loadDrafts();
+    } else {
+      if (statusEl) { statusEl.textContent = d.error || 'Save failed'; statusEl.style.color = 'var(--error)'; statusEl.classList.remove('hidden'); }
+    }
+  } catch (e) {
+    if (statusEl) { statusEl.textContent = e.message; statusEl.style.color = 'var(--error)'; statusEl.classList.remove('hidden'); }
+  }
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Draft'; }
+}
+
+async function deleteDraft(id) {
+  if (!confirm('Delete this email draft?')) return;
+  try {
+    const d = await apiFetch(`/api/outreach/${id}`, { method: 'DELETE' });
+    if (d.success) {
+      selectedDraftId = null; currentDraftData = null;
+      const editor = document.getElementById('outreach-editor');
+      const empty  = document.getElementById('outreach-editor-empty');
+      editor.classList.remove('visible'); editor.innerHTML = '';
+      empty.style.display = '';
+      await loadDrafts();
+    }
+  } catch (_) {}
+}
+
+// ─────────────────────────────────────────────────────────────
+// Outreach — send confirmation
+// ─────────────────────────────────────────────────────────────
+function showSendConfirm(draftId) {
+  if (!gmailConnected) {
+    alert('Please connect your Gmail account first (see the banner at the top of the Outreach tab).');
+    return;
+  }
+  const to      = document.getElementById('editor-to')?.value.trim() || '';
+  const subject = document.getElementById('editor-subject')?.value.trim() || '';
+  if (!to) { alert('Please enter a recipient email address before sending.'); return; }
+  if (!subject) { alert('Please enter a subject line.'); return; }
+
+  pendingSendId = draftId;
+  const body = document.getElementById('send-confirm-body');
+  if (body) body.innerHTML = `
+    <p style="margin-bottom:10px">You are about to send this email from <strong>${esc(gmailEmail)}</strong>:</p>
+    <p><strong>To:</strong> ${esc(to)}</p>
+    <p><strong>Subject:</strong> ${esc(subject)}</p>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-muted)">This action cannot be undone.</p>`;
+  document.getElementById('send-confirm-overlay')?.classList.remove('hidden');
+}
+
+async function confirmSend() {
+  const overlay = document.getElementById('send-confirm-overlay');
+  overlay?.classList.add('hidden');
+  if (!pendingSendId) return;
+
+  // Save any unsaved edits first
+  await saveDraft();
+
+  const sendBtn = document.getElementById('editor-send-btn');
+  if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = 'Sending…'; }
+  const statusEl = document.getElementById('editor-status');
+
+  try {
+    const d = await apiFetch(`/api/outreach/${pendingSendId}/send`, { method: 'POST' });
+    if (d.success) {
+      if (statusEl) { statusEl.textContent = '✓ Email sent!'; statusEl.style.color = 'var(--success)'; statusEl.classList.remove('hidden'); }
+      await loadDrafts();
+      // Refresh editor to show sent state
+      const updatedDraft = { ...currentDraftData, status: 'sent' };
+      openDraftEditor(updatedDraft);
+    } else {
+      if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send Email'; }
+      if (statusEl) { statusEl.textContent = d.error || 'Send failed'; statusEl.style.color = 'var(--error)'; statusEl.classList.remove('hidden'); }
+    }
+  } catch (e) {
+    if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send Email'; }
+    if (statusEl) { statusEl.textContent = e.message; statusEl.style.color = 'var(--error)'; statusEl.classList.remove('hidden'); }
+  }
+  pendingSendId = null;
+}
+
+// Confirm modal wiring
+document.getElementById('send-confirm-yes')?.addEventListener('click', confirmSend);
+document.getElementById('send-confirm-no')?.addEventListener('click', () => {
+  document.getElementById('send-confirm-overlay')?.classList.add('hidden');
+  pendingSendId = null;
+});
+document.getElementById('send-confirm-close')?.addEventListener('click', () => {
+  document.getElementById('send-confirm-overlay')?.classList.add('hidden');
+  pendingSendId = null;
+});
+
+// Outreach toolbar wiring
+document.getElementById('outreach-search-btn')?.addEventListener('click', searchPapers);
+document.getElementById('outreach-search-input')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchPapers();
+});
+document.getElementById('refresh-drafts')?.addEventListener('click', loadDrafts);
 
 // ─────────────────────────────────────────────────────────────
 // API helper

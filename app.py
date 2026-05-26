@@ -1,5 +1,5 @@
 """
-NeuroNourish Flask server — Phase 7
+NeuroNourish Flask server — Phase 8
 
 Routes:
   GET  /                         → serve index.html (login required)
@@ -40,9 +40,11 @@ from groq import Groq
 from auth import auth_bp
 from config import GROQ_API_KEY, MODEL, VAULT_PATH, VAULT_WIKI_PATH
 from database import (
-    ActivityLog, Base, ChatMessage, Note, Notification,
-    SessionLocal, TeamComment, TeamNote, User, engine,
+    ActivityLog, AuthorOutreach, Base, ChatMessage, GmailToken,
+    Note, Notification, SessionLocal, TeamComment, TeamNote, User, engine,
 )
+import gmail_service
+import outreach as outreach_module
 from embed import build_index, query_index, reindex_note
 from extensions import bcrypt, login_manager
 from ingest import ingest_doi, ingest_pdf, ingest_pubmed, ingest_topic, ingest_url, write_note
@@ -433,7 +435,7 @@ def route_chat():
             f"[Team note by {n.created_by}: \"{n.title}\"]\n{(n.content or '')[:800]}"
             for n in team_matches
         ]
-        team_sources = [f"[team] {n.title}" for n in team_matches]
+        team_sources = [{"id": n.id, "title": n.title} for n in team_matches]
 
         full_context = vault_ctx
         if team_ctx_parts:
@@ -1176,6 +1178,255 @@ def api_notifications_read_all():
         db.commit()
         db.close()
         return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Gmail send (via stored OAuth token) ──────────────────────────────────────
+
+@app.route("/api/gmail/send", methods=["POST"])
+@login_required
+def api_gmail_send():
+    data = request.get_json(force=True)
+    to_email   = (data.get("to_email") or "").strip()
+    subject    = (data.get("subject") or "").strip()
+    body       = (data.get("body") or "").strip()
+    outreach_id = data.get("outreach_id", "")
+
+    if not to_email or not subject or not body:
+        return jsonify({"error": "to_email, subject, and body are required"}), 400
+
+    result = gmail_service.send_email(current_user.username, to_email, subject, body)
+    if not result["success"]:
+        return jsonify({"error": result["error"]}), 400
+
+    if outreach_id:
+        try:
+            db = SessionLocal()
+            rec = db.query(AuthorOutreach).filter_by(
+                id=outreach_id, user_id=current_user.username
+            ).first()
+            if rec:
+                rec.status = "sent"
+                rec.sent_at = datetime.datetime.utcnow()
+                db.commit()
+            db.close()
+        except Exception:
+            pass
+
+    _log("outreach_sent", f"to {to_email} — {subject[:60]}")
+    return jsonify({"success": True, "message_id": result.get("message_id", "")})
+
+
+# ── Author outreach routes ────────────────────────────────────────────────────
+
+@app.route("/api/outreach/search", methods=["POST"])
+@login_required
+@require_role("researcher", "admin")
+def api_outreach_search():
+    data = request.get_json(force=True)
+    topic = (data.get("topic") or "").strip()
+    if not topic:
+        return jsonify({"error": "topic is required"}), 400
+    max_results = min(int(data.get("max_results", 10)), 20)
+    try:
+        papers = outreach_module.search_papers(topic, max_results)
+        return jsonify({"papers": papers})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/outreach/draft", methods=["POST"])
+@login_required
+@require_role("researcher", "admin")
+def api_outreach_draft():
+    data = request.get_json(force=True)
+    author_name  = (data.get("author_name") or "").strip()
+    author_email = (data.get("author_email") or "").strip() or None
+    paper_title  = (data.get("paper_title") or "").strip()
+    journal      = (data.get("journal") or "").strip()
+    year         = (data.get("year") or "").strip()
+    doi          = (data.get("doi") or "").strip() or None
+    pmid         = (data.get("pmid") or "").strip() or None
+    topic        = (data.get("topic") or "").strip()
+
+    if not author_name or not paper_title:
+        return jsonify({"error": "author_name and paper_title are required"}), 400
+
+    # Sender identity: username + Gmail address if connected
+    db = SessionLocal()
+    gmail_row = db.query(GmailToken).filter_by(user_id=current_user.username).first()
+    sender_email = gmail_row.email_address if gmail_row else f"{current_user.username}@unknown"
+    db.close()
+
+    try:
+        draft = outreach_module.draft_outreach_email(
+            author_name=author_name,
+            paper_title=paper_title,
+            journal=journal,
+            year=year,
+            topic=topic,
+            sender_name=current_user.username,
+            sender_email=sender_email,
+        )
+        db = SessionLocal()
+        rec = AuthorOutreach(
+            id=str(uuid.uuid4()),
+            user_id=current_user.username,
+            author_name=author_name,
+            author_email=author_email,
+            paper_title=paper_title,
+            journal=journal,
+            year=year,
+            doi=doi,
+            pmid=pmid,
+            topic=topic,
+            email_subject=draft["subject"],
+            email_body=draft["body"],
+            status="draft",
+        )
+        db.add(rec)
+        db.commit()
+        result = {
+            "id": rec.id,
+            "author_name": rec.author_name,
+            "author_email": rec.author_email or "",
+            "paper_title": rec.paper_title,
+            "journal": rec.journal or "",
+            "year": rec.year or "",
+            "doi": rec.doi or "",
+            "pmid": rec.pmid or "",
+            "topic": rec.topic or "",
+            "subject": rec.email_subject,
+            "body": rec.email_body,
+            "status": rec.status,
+            "created_at": rec.created_at.isoformat() + "Z" if rec.created_at else "",
+        }
+        db.close()
+        _log("outreach_draft", f"{author_name} — {paper_title[:60]}")
+        return jsonify({"success": True, "draft": result}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/outreach")
+@login_required
+def api_outreach_list():
+    try:
+        db = SessionLocal()
+        recs = (
+            db.query(AuthorOutreach)
+            .filter_by(user_id=current_user.username)
+            .order_by(AuthorOutreach.created_at.desc())
+            .all()
+        )
+        result = [
+            {
+                "id": r.id,
+                "author_name": r.author_name,
+                "author_email": r.author_email or "",
+                "paper_title": r.paper_title,
+                "journal": r.journal or "",
+                "year": r.year or "",
+                "doi": r.doi or "",
+                "pmid": r.pmid or "",
+                "topic": r.topic or "",
+                "subject": r.email_subject or "",
+                "body": r.email_body or "",
+                "status": r.status,
+                "created_at": r.created_at.isoformat() + "Z" if r.created_at else "",
+                "sent_at": r.sent_at.isoformat() + "Z" if r.sent_at else "",
+            }
+            for r in recs
+        ]
+        db.close()
+        return jsonify({"drafts": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/outreach/<outreach_id>", methods=["PUT"])
+@login_required
+def api_outreach_update(outreach_id):
+    try:
+        db = SessionLocal()
+        rec = db.query(AuthorOutreach).filter_by(
+            id=outreach_id, user_id=current_user.username
+        ).first()
+        if not rec:
+            db.close()
+            return jsonify({"error": "Draft not found"}), 404
+        data = request.get_json(force=True)
+        if "subject" in data:
+            rec.email_subject = data["subject"]
+        if "body" in data:
+            rec.email_body = data["body"]
+        if "author_email" in data:
+            rec.author_email = (data["author_email"] or "").strip() or None
+        db.commit()
+        result = {
+            "id": rec.id, "author_name": rec.author_name,
+            "author_email": rec.author_email or "",
+            "paper_title": rec.paper_title, "status": rec.status,
+            "subject": rec.email_subject or "", "body": rec.email_body or "",
+        }
+        db.close()
+        return jsonify({"success": True, "draft": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/outreach/<outreach_id>", methods=["DELETE"])
+@login_required
+@require_role("researcher", "admin")
+def api_outreach_delete(outreach_id):
+    try:
+        db = SessionLocal()
+        rec = db.query(AuthorOutreach).filter_by(
+            id=outreach_id, user_id=current_user.username
+        ).first()
+        if not rec:
+            db.close()
+            return jsonify({"error": "Draft not found"}), 404
+        db.delete(rec)
+        db.commit()
+        db.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/outreach/<outreach_id>/send", methods=["POST"])
+@login_required
+def api_outreach_send(outreach_id):
+    try:
+        db = SessionLocal()
+        rec = db.query(AuthorOutreach).filter_by(
+            id=outreach_id, user_id=current_user.username
+        ).first()
+        if not rec:
+            db.close()
+            return jsonify({"error": "Draft not found"}), 404
+        if not rec.author_email:
+            db.close()
+            return jsonify({"error": "No recipient email address on this draft"}), 400
+
+        result = gmail_service.send_email(
+            current_user.username,
+            rec.author_email,
+            rec.email_subject or "(no subject)",
+            rec.email_body or "",
+        )
+        if not result["success"]:
+            db.close()
+            return jsonify({"error": result["error"]}), 400
+
+        rec.status = "sent"
+        rec.sent_at = datetime.datetime.utcnow()
+        db.commit()
+        db.close()
+        _log("outreach_sent", f"{rec.author_name} — {rec.paper_title[:60]}")
+        return jsonify({"success": True, "message_id": result.get("message_id", "")})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

@@ -8,7 +8,7 @@ import json
 import os
 
 from flask_login import UserMixin
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Text, create_engine
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Text, UniqueConstraint, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.sql import func
 
@@ -133,3 +133,42 @@ class Notification(Base):
     message = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+class GmailToken(Base):
+    __tablename__ = "gmail_tokens"
+
+    id = Column(String(36), primary_key=True)
+    user_id = Column(
+        String(120), ForeignKey("users.username", ondelete="CASCADE"),
+        nullable=False, unique=True, index=True,
+    )
+    access_token = Column(Text, nullable=False)
+    refresh_token = Column(Text, nullable=True)
+    token_expiry = Column(DateTime(timezone=True), nullable=True)
+    email_address = Column(String(200), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class AuthorOutreach(Base):
+    __tablename__ = "author_outreach"
+
+    id = Column(String(36), primary_key=True)
+    user_id = Column(String(120), nullable=False, index=True)
+    author_name = Column(String(500), nullable=False)
+    author_email = Column(String(200), nullable=True)
+    paper_title = Column(Text, nullable=False)
+    journal = Column(String(500), nullable=True)
+    year = Column(String(10), nullable=True)
+    doi = Column(String(200), nullable=True)
+    pmid = Column(String(50), nullable=True)
+    topic = Column(String(500), nullable=True)
+    email_subject = Column(Text, nullable=True)
+    email_body = Column(Text, nullable=True)
+    status = Column(String(20), default="draft", nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    sent_at = Column(DateTime(timezone=True), nullable=True)
+    notes = Column(Text, nullable=True)
