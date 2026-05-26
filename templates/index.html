@@ -593,7 +593,166 @@ html, body {
   .filter-select { font-size: 11px; padding: 5px 8px; }
   .modal { width: 96vw; max-height: 96vh; }
   .modal-head-actions .btn-sm { padding: 5px 8px; font-size: 11px; }
+  .team-layout { flex-direction: column; }
+  .team-list-col {
+    width: 100%; min-width: 0; border-right: none;
+    border-bottom: 1px solid var(--border); max-height: 45%;
+  }
+  .team-viewer-col { flex: 1; min-height: 0; }
+  .team-viewer-head { padding: 10px 14px; }
+  .team-viewer-body { padding: 12px 14px; }
+  .tn-form { padding: 12px 14px; }
 }
+
+/* ── Team Notes panel ────────────────────────────────────────── */
+
+.team-layout { display: flex; height: 100%; overflow: hidden; }
+
+.team-list-col {
+  width: 300px; min-width: 300px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface);
+}
+
+.team-toolbar { padding: 12px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+
+.team-search-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 8px 12px; color: var(--text);
+  font-size: 12px; outline: none; transition: border-color 0.15s; font-family: var(--font);
+  margin-bottom: 8px;
+}
+.team-search-input:focus { border-color: var(--accent); }
+.team-filter-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.team-note-list { flex: 1; overflow-y: auto; padding: 6px; }
+.team-note-list::-webkit-scrollbar { width: 3px; }
+.team-note-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+.tn-card {
+  padding: 10px 12px; border-radius: 7px; cursor: pointer;
+  transition: background 0.1s; border: 1px solid transparent; margin-bottom: 4px;
+}
+.tn-card:hover { background: var(--surface2); }
+.tn-card.selected { background: var(--accent-dim); border-color: var(--accent); }
+.tn-card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; line-height: 1.4; }
+.tn-card-meta { font-size: 11px; color: var(--text-muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tn-card-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+.tn-tag {
+  display: inline-block; padding: 1px 6px; border-radius: 3px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
+  background: var(--accent-dim); color: var(--accent-h);
+}
+.tn-help-badge {
+  display: inline-block; padding: 1px 7px; border-radius: 3px;
+  font-size: 9px; font-weight: 700; background: #2a1010; color: var(--error);
+}
+.tn-empty { padding: 32px 16px; text-align: center; color: var(--text-muted); font-size: 12px; line-height: 1.6; }
+
+.team-viewer-col { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.team-viewer-empty {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 13px; text-align: center;
+}
+.team-viewer { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+.team-viewer.visible { display: flex; }
+
+.team-viewer-head {
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; gap: 10px; flex-shrink: 0;
+}
+.team-viewer-title {
+  flex: 1; font-size: 16px; font-weight: 700; color: var(--text);
+  line-height: 1.4; min-width: 0; word-break: break-word;
+}
+.team-viewer-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.team-viewer-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.team-viewer-body::-webkit-scrollbar { width: 5px; }
+.team-viewer-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.tn-meta-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+.tn-by { font-size: 11px; color: var(--text-muted); }
+.tn-date { font-size: 11px; color: var(--text-muted); }
+.tn-content {
+  font-size: 13px; line-height: 1.7; color: var(--text);
+  border-top: 1px solid var(--border); padding-top: 14px; margin-bottom: 20px;
+  white-space: pre-wrap; word-break: break-word;
+}
+
+.tn-help-banner {
+  background: #1a0a0a; border: 1px solid #5a1a1a;
+  border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.tn-help-banner-text { flex: 1; font-size: 12px; color: #e87070; }
+
+.tn-form { padding: 16px 20px; overflow-y: auto; flex: 1; }
+.tn-form-group { margin-bottom: 14px; }
+.tn-form-label {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;
+}
+.tn-form-textarea {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 10px 12px; color: var(--text);
+  font-size: 13px; font-family: var(--font); line-height: 1.6;
+  resize: vertical; min-height: 180px; outline: none; transition: border-color 0.15s;
+}
+.tn-form-textarea:focus { border-color: var(--accent); }
+.tn-form-check { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text); }
+.tn-form-check input { width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); }
+
+.tn-comments-head {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 12px; border-top: 1px solid var(--border); padding-top: 16px;
+}
+.tn-comment {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 10px 12px; margin-bottom: 8px;
+}
+.tn-comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+.tn-comment-author { font-size: 11px; font-weight: 700; color: var(--text); }
+.tn-comment-time { font-size: 10px; color: var(--text-muted); }
+.tn-comment-edited { font-size: 10px; color: var(--text-muted); font-style: italic; }
+.tn-comment-text { font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-wrap; }
+.tn-comment-actions { display: flex; gap: 6px; margin-top: 6px; }
+.tn-comment-edit-area {
+  width: 100%; background: var(--surface3); border: 1px solid var(--border);
+  border-radius: 5px; padding: 8px 10px; color: var(--text);
+  font-family: var(--font); font-size: 13px; line-height: 1.6;
+  resize: vertical; min-height: 60px; outline: none; margin: 6px 0;
+  transition: border-color 0.15s;
+}
+.tn-comment-edit-area:focus { border-color: var(--accent); }
+.tn-add-comment { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 14px; }
+.tn-add-comment textarea {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 10px 12px; color: var(--text);
+  font-family: var(--font); font-size: 13px; line-height: 1.6;
+  resize: vertical; min-height: 72px; outline: none;
+  transition: border-color 0.15s; margin-bottom: 8px; display: block;
+}
+.tn-add-comment textarea:focus { border-color: var(--accent); }
+
+.tab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; border-radius: 8px;
+  background: var(--error); color: #fff;
+  font-size: 10px; font-weight: 700; padding: 0 4px;
+  margin-left: 5px; vertical-align: middle; line-height: 1;
+}
+.tab-badge.hidden { display: none; }
+
+.help-requests-list { display: flex; flex-direction: column; gap: 6px; }
+.help-req-item {
+  background: #1a0808; border: 1px solid #4a1212; border-radius: 6px;
+  padding: 7px 10px; cursor: pointer; transition: border-color 0.15s;
+}
+.help-req-item:hover { border-color: var(--error); }
+.help-req-title { font-size: 11px; font-weight: 600; color: #e08080; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.help-req-by { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+.source-card.team-source { background: var(--accent-dim); border-color: var(--accent); color: var(--accent-h); }
 </style>
 </head>
 <body>
@@ -666,6 +825,17 @@ html, body {
         </div>
       </div>
 
+      <!-- Help Requests -->
+      <div class="sb-section">
+        <div class="sb-section-head">
+          <span class="sb-label">Help Requests</span>
+          <button class="icon-btn" id="refresh-help-req" title="Refresh">↻</button>
+        </div>
+        <div class="help-requests-list" id="help-req-list">
+          <div class="list-placeholder">Loading…</div>
+        </div>
+      </div>
+
     </div>
   </aside>
 
@@ -685,6 +855,7 @@ html, body {
       {% endif %}
       <button class="main-tab{% if role == 'viewer' %} active{% endif %}" data-panel="chat">Chat</button>
       <button class="main-tab" data-panel="vault">Vault</button>
+      <button class="main-tab" data-panel="team">Team Notes<span class="tab-badge hidden" id="team-tab-badge"></span></button>
     </nav>
 
     <div class="panels">
@@ -808,6 +979,44 @@ html, body {
         </div>
       </div>
 
+      <!-- ── TEAM NOTES PANEL ───────────────────────────────────── -->
+      <div class="panel" id="panel-team">
+        <div class="team-layout">
+
+          <!-- Left column: note list -->
+          <div class="team-list-col">
+            <div class="team-toolbar">
+              <input type="text" id="tn-search" class="team-search-input"
+                     placeholder="Search team notes…" autocomplete="off">
+              <div class="team-filter-row">
+                <select id="tn-filter-help" class="filter-select">
+                  <option value="">All notes</option>
+                  <option value="1">Needs help</option>
+                </select>
+                {% if role != 'viewer' %}
+                <button class="btn btn-sm btn-primary" id="tn-new-btn" style="margin-left:auto">+ New</button>
+                {% endif %}
+              </div>
+            </div>
+            <div class="team-note-list" id="tn-list">
+              <div class="tn-empty">Loading…</div>
+            </div>
+          </div>
+
+          <!-- Right panel: viewer / form -->
+          <div class="team-viewer-col">
+            <div class="team-viewer-empty" id="tn-viewer-empty">
+              <div>
+                <div style="font-size:32px;margin-bottom:10px">📝</div>
+                <div>Select a note or create a new one</div>
+              </div>
+            </div>
+            <div class="team-viewer" id="tn-viewer"></div>
+          </div>
+
+        </div>
+      </div>
+
     </div><!-- /panels -->
   </main>
 </div><!-- /layout -->
@@ -817,11 +1026,16 @@ html, body {
 // Constants & State
 // ─────────────────────────────────────────────────────────────
 const CURRENT_ROLE = '{{ role }}';
+const CURRENT_USER = '{{ username }}';
 let chatHistory = [];
 let lastActivityTs = null;
 let vaultNotes = [];
 let currentNoteFile = null;
 let vaultLoaded = false;
+let teamNotes = [];
+let selectedTeamNoteId = null;
+let teamNotesLoaded = false;
+let currentTeamNote = null;
 
 // ─────────────────────────────────────────────────────────────
 // Utilities
@@ -914,6 +1128,10 @@ document.querySelectorAll('.main-tab').forEach(btn => {
     }
     if (btn.dataset.panel === 'chat') {
       document.getElementById('activity-dot')?.classList.add('hidden');
+    }
+    if (btn.dataset.panel === 'team') {
+      markAllRead();
+      if (!teamNotesLoaded) { loadTeamNotes(); teamNotesLoaded = true; }
     }
   });
 });
@@ -1479,18 +1697,22 @@ document.getElementById('vault-refresh')?.addEventListener('click', loadVaultNot
 // Team Activity
 // ─────────────────────────────────────────────────────────────
 const BADGE_CLASS = {
-  ingest_topic:  'badge-topic',  ingest_url:    'badge-url',
-  ingest_pdf:    'badge-pdf',    chat:          'badge-chat',
-  ingest_pubmed: 'badge-pubmed', ingest_doi:    'badge-doi',
-  edit_note:     'badge-wiki',   delete_note:   'badge-wiki',
-  reindex_note:  'badge-wiki',
+  ingest_topic:       'badge-topic',  ingest_url:         'badge-url',
+  ingest_pdf:         'badge-pdf',    chat:               'badge-chat',
+  ingest_pubmed:      'badge-pubmed', ingest_doi:         'badge-doi',
+  edit_note:          'badge-wiki',   delete_note:        'badge-wiki',
+  reindex_note:       'badge-wiki',   team_note_create:   'badge-chat',
+  team_note_edit:     'badge-wiki',   team_note_delete:   'badge-wiki',
+  team_note_comment:  'badge-chat',   team_note_resolve:  'badge-doi',
 };
 const BADGE_LABEL = {
-  ingest_topic:  'Topic',  ingest_url:    'URL',
-  ingest_pdf:    'PDF',    chat:          'Chat',
-  ingest_pubmed: 'PubMed', ingest_doi:    'DOI',
-  edit_note:     'Edit',   delete_note:   'Delete',
-  reindex_note:  'Index',
+  ingest_topic:       'Topic',   ingest_url:         'URL',
+  ingest_pdf:         'PDF',     chat:               'Chat',
+  ingest_pubmed:      'PubMed',  ingest_doi:         'DOI',
+  edit_note:          'Edit',    delete_note:        'Delete',
+  reindex_note:       'Index',   team_note_create:   'Team',
+  team_note_edit:     'Team',    team_note_delete:   'Team',
+  team_note_comment:  'Comment', team_note_resolve:  'Resolved',
 };
 
 async function loadActivity() {
@@ -1525,6 +1747,457 @@ async function loadActivity() {
 setInterval(loadActivity, 60000);
 
 // ─────────────────────────────────────────────────────────────
+// Notifications
+// ─────────────────────────────────────────────────────────────
+async function loadNotifications() {
+  try {
+    const d = await apiFetch('/api/notifications');
+    const n = (d.notifications || []).length;
+    const badge = document.getElementById('team-tab-badge');
+    if (!badge) return;
+    if (n > 0) {
+      badge.textContent = n > 9 ? '9+' : String(n);
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  } catch (_) {}
+}
+
+async function markAllRead() {
+  try {
+    await apiFetch('/api/notifications/read-all', { method: 'POST' });
+    document.getElementById('team-tab-badge')?.classList.add('hidden');
+  } catch (_) {}
+}
+
+setInterval(loadNotifications, 60000);
+
+// ─────────────────────────────────────────────────────────────
+// Help Requests sidebar
+// ─────────────────────────────────────────────────────────────
+async function loadHelpRequests() {
+  const list = document.getElementById('help-req-list');
+  if (!list) return;
+  try {
+    const d = await apiFetch('/api/team-notes/needs-help');
+    const notes = (d.notes || []).slice(0, 3);
+    if (!notes.length) {
+      list.innerHTML = '<div class="list-placeholder">No open requests</div>';
+      return;
+    }
+    list.innerHTML = notes.map(n => `
+      <div class="help-req-item" data-id="${esc(n.id)}">
+        <div class="help-req-title">${esc(n.title)}</div>
+        <div class="help-req-by">by ${esc(n.created_by)} · ${relTime(n.updated_at || n.created_at)}</div>
+      </div>`).join('');
+    list.querySelectorAll('.help-req-item').forEach(el => {
+      el.addEventListener('click', () => {
+        document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        const teamTab = document.querySelector('[data-panel="team"]');
+        if (teamTab) teamTab.classList.add('active');
+        document.getElementById('panel-team')?.classList.add('active');
+        markAllRead();
+        if (!teamNotesLoaded) { loadTeamNotes(); teamNotesLoaded = true; }
+        selectTeamNote(el.dataset.id);
+      });
+    });
+  } catch (_) {
+    list.innerHTML = '<div class="list-placeholder" style="color:var(--error)">Failed to load</div>';
+  }
+}
+
+document.getElementById('refresh-help-req')?.addEventListener('click', loadHelpRequests);
+
+// ─────────────────────────────────────────────────────────────
+// Team Notes — load & render list
+// ─────────────────────────────────────────────────────────────
+async function loadTeamNotes() {
+  const helpFilter = document.getElementById('tn-filter-help')?.value || '';
+  let url = '/api/team-notes?';
+  if (helpFilter === '1') url += 'needs_help=true&';
+  try {
+    const d = await apiFetch(url);
+    teamNotes = d.notes || [];
+    renderTeamNoteList();
+  } catch (_) {
+    const list = document.getElementById('tn-list');
+    if (list) list.innerHTML = '<div class="tn-empty" style="color:var(--error)">Failed to load</div>';
+  }
+}
+
+function renderTeamNoteList() {
+  const list = document.getElementById('tn-list');
+  if (!list) return;
+  const search = (document.getElementById('tn-search')?.value || '').toLowerCase();
+  const filtered = teamNotes.filter(n => {
+    if (!search) return true;
+    return [n.title, n.created_by, ...n.tags].join(' ').toLowerCase().includes(search);
+  });
+  if (!filtered.length) {
+    list.innerHTML = `<div class="tn-empty">${teamNotes.length ? 'No notes match.' : 'No team notes yet.<br>Create the first one!'}</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(n => {
+    const tagsHtml = n.tags.slice(0, 3).map(t => `<span class="tn-tag">${esc(t)}</span>`).join('');
+    const helpBadge = (n.needs_help && !n.help_resolved) ? '<span class="tn-help-badge">Needs Help</span>' : '';
+    const commentBit = n.comment_count > 0 ? `<span>💬 ${n.comment_count}</span>` : '';
+    return `
+      <div class="tn-card${n.id === selectedTeamNoteId ? ' selected' : ''}" data-id="${esc(n.id)}">
+        <div class="tn-card-title">${esc(n.title)}</div>
+        <div class="tn-card-meta">
+          <span>${esc(n.created_by)}</span>
+          ${helpBadge}
+          ${commentBit}
+          <span style="margin-left:auto">${relTime(n.updated_at || n.created_at)}</span>
+        </div>
+        ${tagsHtml ? `<div class="tn-card-tags">${tagsHtml}</div>` : ''}
+      </div>`;
+  }).join('');
+  list.querySelectorAll('.tn-card').forEach(el =>
+    el.addEventListener('click', () => selectTeamNote(el.dataset.id))
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Team Notes — select & view
+// ─────────────────────────────────────────────────────────────
+async function selectTeamNote(id) {
+  selectedTeamNoteId = id;
+  renderTeamNoteList();
+  const viewer = document.getElementById('tn-viewer');
+  const emptyEl = document.getElementById('tn-viewer-empty');
+  emptyEl.style.display = 'none';
+  viewer.classList.add('visible');
+  viewer.innerHTML = '<div style="padding:32px;color:var(--text-muted)"><span class="spinner"></span> Loading…</div>';
+  try {
+    const note = await apiFetch('/api/team-notes/' + id);
+    if (note.error) {
+      viewer.innerHTML = `<div style="padding:32px;color:var(--error)">${esc(note.error)}</div>`;
+      return;
+    }
+    currentTeamNote = note;
+    renderTeamNoteViewer(note);
+  } catch (e) {
+    viewer.innerHTML = `<div style="padding:32px;color:var(--error)">Failed: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderCommentHtml(comment, noteId) {
+  const canEdit = comment.created_by === CURRENT_USER || CURRENT_ROLE === 'admin';
+  return `
+    <div class="tn-comment" id="comment-${esc(comment.id)}">
+      <div class="tn-comment-header">
+        <span class="tn-comment-author">${esc(comment.created_by)}</span>
+        <span class="tn-comment-time">${relTime(comment.created_at)}</span>
+        ${comment.is_edited ? '<span class="tn-comment-edited">(edited)</span>' : ''}
+      </div>
+      <div class="tn-comment-text">${esc(comment.content)}</div>
+      ${canEdit ? `
+        <div class="tn-comment-actions">
+          <button class="btn btn-sm btn-ghost"
+                  data-edit-comment="${esc(comment.id)}"
+                  data-note-id="${esc(noteId)}">Edit</button>
+          <button class="btn btn-sm btn-danger"
+                  data-delete-comment="${esc(comment.id)}"
+                  data-note-id="${esc(noteId)}">Delete</button>
+        </div>` : ''}
+    </div>`;
+}
+
+function renderTeamNoteViewer(note) {
+  const viewer = document.getElementById('tn-viewer');
+  const canEdit = note.created_by === CURRENT_USER || CURRENT_ROLE === 'admin';
+  const canDelete = CURRENT_ROLE === 'admin';
+  const canResolve = (CURRENT_ROLE === 'researcher' || CURRENT_ROLE === 'admin')
+                     && note.needs_help && !note.help_resolved;
+
+  const privacyBadge = note.is_public
+    ? '<span class="badge" style="background:#0a2018;color:var(--success)">Public</span>'
+    : '<span class="badge" style="background:#2a1010;color:var(--error)">Private</span>';
+
+  const helpBanner = note.needs_help && !note.help_resolved
+    ? `<div class="tn-help-banner">
+        <span class="tn-help-banner-text">⚠ Help requested</span>
+        ${canResolve ? '<button class="btn btn-sm btn-ghost" id="tn-resolve-btn">Mark Resolved</button>' : ''}
+       </div>` : '';
+
+  const resolvedBanner = note.help_resolved
+    ? '<div style="background:#0a2018;border:1px solid #1a5a2a;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:12px;color:var(--success)">✓ Help resolved</div>'
+    : '';
+
+  const tagsHtml = note.tags.map(t => `<span class="tn-tag">${esc(t)}</span>`).join('');
+  const commentsHtml = note.comments.map(c => renderCommentHtml(c, note.id)).join('');
+
+  viewer.innerHTML = `
+    <div class="team-viewer-head">
+      <div class="team-viewer-title">${esc(note.title)}</div>
+      <div class="team-viewer-actions">
+        ${canEdit ? '<button class="btn btn-sm btn-ghost" id="tn-edit-btn">Edit</button>' : ''}
+        ${canDelete ? '<button class="btn btn-sm btn-danger" id="tn-delete-btn">Delete</button>' : ''}
+      </div>
+    </div>
+    <div class="team-viewer-body">
+      <div class="tn-meta-row">
+        <span class="tn-by">by ${esc(note.created_by)}</span>
+        <span class="tn-date">${relTime(note.updated_at || note.created_at)}</span>
+        ${privacyBadge}
+        ${tagsHtml}
+      </div>
+      ${helpBanner}
+      ${resolvedBanner}
+      <div class="tn-content">${esc(note.content)}</div>
+      <div class="tn-comments-head">Comments (${note.comments.length})</div>
+      <div id="tn-comments-list">${commentsHtml}</div>
+      <div class="tn-add-comment">
+        <textarea id="tn-comment-input" placeholder="Add a comment…" rows="3"></textarea>
+        <button class="btn btn-sm btn-primary" id="tn-add-comment-btn">Post comment</button>
+      </div>
+    </div>`;
+
+  document.getElementById('tn-edit-btn')?.addEventListener('click', () => showTeamNoteForm(currentTeamNote));
+  document.getElementById('tn-delete-btn')?.addEventListener('click', () => deleteTeamNote(note.id));
+  document.getElementById('tn-resolve-btn')?.addEventListener('click', () => resolveHelp(note.id));
+  document.getElementById('tn-add-comment-btn')?.addEventListener('click', () => addComment(note.id));
+
+  document.getElementById('tn-comments-list')?.querySelectorAll('[data-edit-comment]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const commentEl = document.getElementById('comment-' + btn.dataset.editComment);
+      if (!commentEl) return;
+      startEditComment(btn.dataset.noteId, btn.dataset.editComment,
+                       commentEl.querySelector('.tn-comment-text').textContent);
+    });
+  });
+  document.getElementById('tn-comments-list')?.querySelectorAll('[data-delete-comment]').forEach(btn => {
+    btn.addEventListener('click', () => deleteComment(btn.dataset.noteId, btn.dataset.deleteComment));
+  });
+}
+
+function clearTeamViewer() {
+  const viewer = document.getElementById('tn-viewer');
+  const emptyEl = document.getElementById('tn-viewer-empty');
+  viewer.classList.remove('visible');
+  viewer.innerHTML = '';
+  emptyEl.style.display = '';
+}
+
+// ─────────────────────────────────────────────────────────────
+// Team Notes — create / edit form
+// ─────────────────────────────────────────────────────────────
+function showTeamNoteForm(note = null) {
+  const viewer = document.getElementById('tn-viewer');
+  document.getElementById('tn-viewer-empty').style.display = 'none';
+  viewer.classList.add('visible');
+  const isEdit = note !== null;
+  viewer.innerHTML = `
+    <div class="team-viewer-head">
+      <div class="team-viewer-title">${isEdit ? 'Edit Note' : 'New Team Note'}</div>
+    </div>
+    <div class="tn-form">
+      <div class="tn-form-group">
+        <label class="tn-form-label">Title *</label>
+        <input type="text" class="full-input" id="tn-form-title"
+               value="${isEdit ? esc(note.title) : ''}" placeholder="Note title…" style="margin-bottom:0">
+      </div>
+      <div class="tn-form-group">
+        <label class="tn-form-label">Content</label>
+        <textarea class="tn-form-textarea" id="tn-form-content"
+                  placeholder="Write your note here…">${isEdit ? esc(note.content) : ''}</textarea>
+      </div>
+      <div class="tn-form-group">
+        <label class="tn-form-label">Tags (comma-separated)</label>
+        <input type="text" class="full-input" id="tn-form-tags"
+               value="${isEdit ? esc(note.tags.join(', ')) : ''}"
+               placeholder="e.g. inflammation, omega-3" style="margin-bottom:0">
+      </div>
+      <div class="tn-form-group">
+        <label class="tn-form-check">
+          <input type="checkbox" id="tn-form-public" ${(!isEdit || note.is_public) ? 'checked' : ''}>
+          Public note (visible to all team members)
+        </label>
+      </div>
+      <div class="tn-form-group">
+        <label class="tn-form-check">
+          <input type="checkbox" id="tn-form-help" ${(isEdit && note.needs_help && !note.help_resolved) ? 'checked' : ''}>
+          Request help from team
+        </label>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-primary btn-sm" id="tn-form-submit">${isEdit ? 'Save Changes' : 'Create Note'}</button>
+        <button class="btn btn-ghost btn-sm" id="tn-form-cancel">Cancel</button>
+      </div>
+      <div class="hidden" id="tn-form-error" style="color:var(--error);font-size:12px;margin-top:8px"></div>
+    </div>`;
+
+  document.getElementById('tn-form-title').focus();
+  document.getElementById('tn-form-submit').addEventListener('click', () => submitTeamNote(isEdit ? note.id : null));
+  document.getElementById('tn-form-cancel').addEventListener('click', () => {
+    if (selectedTeamNoteId) selectTeamNote(selectedTeamNoteId);
+    else clearTeamViewer();
+  });
+}
+
+async function submitTeamNote(noteId) {
+  const title = document.getElementById('tn-form-title').value.trim();
+  if (!title) {
+    const errEl = document.getElementById('tn-form-error');
+    if (errEl) { errEl.textContent = 'Title is required.'; errEl.classList.remove('hidden'); }
+    return;
+  }
+  const content  = document.getElementById('tn-form-content').value;
+  const tagsRaw  = document.getElementById('tn-form-tags').value;
+  const tags     = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
+  const isPublic = document.getElementById('tn-form-public').checked;
+  const needsHelp = document.getElementById('tn-form-help').checked;
+  const submitBtn = document.getElementById('tn-form-submit');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Saving…';
+  try {
+    const url    = noteId ? `/api/team-notes/${noteId}` : '/api/team-notes';
+    const method = noteId ? 'PUT' : 'POST';
+    const d = await apiFetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, content, tags, is_public: isPublic, needs_help: needsHelp }),
+    });
+    if (d.error) {
+      const errEl = document.getElementById('tn-form-error');
+      if (errEl) { errEl.textContent = d.error; errEl.classList.remove('hidden'); }
+      submitBtn.disabled = false;
+      submitBtn.textContent = noteId ? 'Save Changes' : 'Create Note';
+      return;
+    }
+    selectedTeamNoteId = d.note.id;
+    await loadTeamNotes();
+    await loadHelpRequests();
+    selectTeamNote(d.note.id);
+  } catch (e) {
+    const errEl = document.getElementById('tn-form-error');
+    if (errEl) { errEl.textContent = e.message; errEl.classList.remove('hidden'); }
+    submitBtn.disabled = false;
+    submitBtn.textContent = noteId ? 'Save Changes' : 'Create Note';
+  }
+}
+
+async function deleteTeamNote(id) {
+  if (!confirm('Permanently delete this team note and all comments? This cannot be undone.')) return;
+  try {
+    const d = await apiFetch(`/api/team-notes/${id}`, { method: 'DELETE' });
+    if (d.success) {
+      selectedTeamNoteId = null;
+      currentTeamNote = null;
+      clearTeamViewer();
+      await loadTeamNotes();
+      await loadHelpRequests();
+    } else {
+      alert('Delete failed: ' + (d.error || 'Unknown error'));
+    }
+  } catch (e) { alert('Delete failed: ' + e.message); }
+}
+
+async function resolveHelp(id) {
+  if (!confirm('Mark this help request as resolved?')) return;
+  try {
+    const d = await apiFetch(`/api/team-notes/${id}/resolve-help`, { method: 'POST' });
+    if (d.success) {
+      await selectTeamNote(id);
+      await loadTeamNotes();
+      await loadHelpRequests();
+    }
+  } catch (_) {}
+}
+
+// ─────────────────────────────────────────────────────────────
+// Team Notes — comments
+// ─────────────────────────────────────────────────────────────
+async function addComment(noteId) {
+  const input = document.getElementById('tn-comment-input');
+  const content = input?.value.trim();
+  if (!content) return;
+  const btn = document.getElementById('tn-add-comment-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Posting…'; }
+  try {
+    const d = await apiFetch(`/api/team-notes/${noteId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+    });
+    if (d.success) {
+      await selectTeamNote(noteId);
+      await loadTeamNotes();
+    } else {
+      if (btn) { btn.disabled = false; btn.textContent = 'Post comment'; }
+    }
+  } catch (_) { if (btn) { btn.disabled = false; btn.textContent = 'Post comment'; } }
+}
+
+function startEditComment(noteId, commentId, currentText) {
+  const commentEl = document.getElementById('comment-' + commentId);
+  if (!commentEl) return;
+  const textEl    = commentEl.querySelector('.tn-comment-text');
+  const actionsEl = commentEl.querySelector('.tn-comment-actions');
+  textEl.style.display    = 'none';
+  if (actionsEl) actionsEl.style.display = 'none';
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'tn-comment-edit-area';
+  textarea.value = currentText;
+
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:6px;margin-bottom:4px';
+  const saveBtn   = document.createElement('button');
+  const cancelBtn = document.createElement('button');
+  saveBtn.className   = 'btn btn-sm btn-primary';
+  cancelBtn.className = 'btn btn-sm btn-ghost';
+  saveBtn.textContent   = 'Save';
+  cancelBtn.textContent = 'Cancel';
+  btnRow.appendChild(saveBtn);
+  btnRow.appendChild(cancelBtn);
+  commentEl.appendChild(textarea);
+  commentEl.appendChild(btnRow);
+  textarea.focus();
+
+  saveBtn.addEventListener('click', () => saveEditComment(noteId, commentId, textarea.value));
+  cancelBtn.addEventListener('click', () => {
+    textarea.remove(); btnRow.remove();
+    textEl.style.display    = '';
+    if (actionsEl) actionsEl.style.display = '';
+  });
+}
+
+async function saveEditComment(noteId, commentId, newContent) {
+  const trimmed = newContent.trim();
+  if (!trimmed) return;
+  try {
+    const d = await apiFetch(`/api/team-notes/${noteId}/comments/${commentId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: trimmed }),
+    });
+    if (d.success) selectTeamNote(noteId);
+  } catch (_) {}
+}
+
+async function deleteComment(noteId, commentId) {
+  if (!confirm('Delete this comment?')) return;
+  try {
+    const d = await apiFetch(`/api/team-notes/${noteId}/comments/${commentId}`, { method: 'DELETE' });
+    if (d.success) { await selectTeamNote(noteId); await loadTeamNotes(); }
+  } catch (_) {}
+}
+
+// ─────────────────────────────────────────────────────────────
+// Team Notes — filter + toolbar wiring
+// ─────────────────────────────────────────────────────────────
+document.getElementById('tn-search')?.addEventListener('input', renderTeamNoteList);
+document.getElementById('tn-filter-help')?.addEventListener('change', loadTeamNotes);
+document.getElementById('tn-new-btn')?.addEventListener('click', () => {
+  selectedTeamNoteId = null;
+  showTeamNoteForm(null);
+});
+
+// ─────────────────────────────────────────────────────────────
 // Chat
 // ─────────────────────────────────────────────────────────────
 async function sendChat() {
@@ -1548,15 +2221,15 @@ async function sendChat() {
     });
     loader.remove();
     if (d.error) {
-      addAssistantBubble('**Error:** ' + d.error, [], []);
+      addAssistantBubble('**Error:** ' + d.error, [], [], []);
     } else {
-      addAssistantBubble(d.response || '(no response)', d.sources || [], d.suggestions || []);
+      addAssistantBubble(d.response || '(no response)', d.sources || [], d.suggestions || [], d.team_sources || []);
       chatHistory.push({ role: 'user',      content: msg });
       chatHistory.push({ role: 'assistant', content: d.response });
     }
   } catch (e) {
     loader.remove();
-    addAssistantBubble('**Network error:** ' + e.message, [], []);
+    addAssistantBubble('**Network error:** ' + e.message, [], [], []);
   }
 
   input.disabled = false;
@@ -1572,7 +2245,7 @@ function addUserBubble(text) {
   scrollBottom();
 }
 
-function addAssistantBubble(text, sources, suggestions = []) {
+function addAssistantBubble(text, sources, suggestions = [], teamSources = []) {
   const div = document.createElement('div');
   div.className = 'msg assistant';
 
@@ -1582,6 +2255,16 @@ function addAssistantBubble(text, sources, suggestions = []) {
           <button class="source-card" data-file="${esc(s)}">
             <span class="source-icon">📄</span>
             <span>${esc(s.replace('.md',''))}</span>
+          </button>`).join('')
+      }</div>`
+    : '';
+
+  const teamSourcesHtml = teamSources.length
+    ? `<div class="sources-row">${
+        teamSources.map(s => `
+          <button class="source-card team-source" data-tn-id="${esc(s.id)}" data-tn-title="${esc(s.title)}">
+            <span class="source-icon">📝</span>
+            <span>${esc(s.title)}</span>
           </button>`).join('')
       }</div>`
     : '';
@@ -1602,11 +2285,24 @@ function addAssistantBubble(text, sources, suggestions = []) {
       </div>`
     : '';
 
-  div.innerHTML = `<div class="bubble">${mdToHtml(text)}</div>${sourcesHtml}${actionsHtml}${chipsHtml}`;
+  div.innerHTML = `<div class="bubble">${mdToHtml(text)}</div>${sourcesHtml}${teamSourcesHtml}${actionsHtml}${chipsHtml}`;
 
-  div.querySelectorAll('.source-card').forEach(el =>
+  div.querySelectorAll('.source-card:not(.team-source)').forEach(el =>
     el.addEventListener('click', () => openNote(el.dataset.file))
   );
+
+  div.querySelectorAll('.source-card.team-source').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      const teamTab = document.querySelector('[data-panel="team"]');
+      if (teamTab) teamTab.classList.add('active');
+      document.getElementById('panel-team')?.classList.add('active');
+      markAllRead();
+      if (!teamNotesLoaded) { loadTeamNotes(); teamNotesLoaded = true; }
+      selectTeamNote(el.dataset.tnId);
+    });
+  });
 
   div.querySelectorAll('.copy-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1669,6 +2365,8 @@ async function apiFetch(url, opts = {}) {
 // ─────────────────────────────────────────────────────────────
 loadNotes();
 loadActivity();
+loadNotifications();
+loadHelpRequests();
 </script>
 </body>
 </html>

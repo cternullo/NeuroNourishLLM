@@ -1,5 +1,5 @@
 """
-NeuroNourish Flask server — Phase 6
+NeuroNourish Flask server — Phase 7
 
 Routes:
   GET  /                         → serve index.html (login required)
@@ -39,7 +39,10 @@ from groq import Groq
 
 from auth import auth_bp
 from config import GROQ_API_KEY, MODEL, VAULT_PATH, VAULT_WIKI_PATH
-from database import ActivityLog, Base, ChatMessage, Note, SessionLocal, User, engine
+from database import (
+    ActivityLog, Base, ChatMessage, Note, Notification,
+    SessionLocal, TeamComment, TeamNote, User, engine,
+)
 from embed import build_index, query_index, reindex_note
 from extensions import bcrypt, login_manager
 from ingest import ingest_doi, ingest_pdf, ingest_pubmed, ingest_topic, ingest_url, write_note
@@ -377,6 +380,27 @@ def route_ingest_doi():
 
 # ── chat ──────────────────────────────────────────────────────────────────────
 
+def _search_team_notes(query: str, limit: int = 3) -> list:
+    """Keyword search across public team notes for chat context."""
+    tokens = list({t.lower() for t in re.findall(r"\b\w{3,}\b", query)})
+    if not tokens:
+        return []
+    try:
+        db = SessionLocal()
+        notes = db.query(TeamNote).filter(TeamNote.is_public == True).all()
+        db.close()
+    except Exception:
+        return []
+    scored = []
+    for note in notes:
+        text = (note.title + " " + (note.content or "")).lower()
+        score = sum(1 for t in tokens if t in text)
+        if score > 0:
+            scored.append((score, note))
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [n for _, n in scored[:limit]]
+
+
 @app.route("/chat", methods=["POST"])
 @login_required
 def route_chat():
@@ -390,24 +414,36 @@ def route_chat():
     try:
         build_index()
 
-        # Fetch top-20, rescore, return best 7
+        # Vault RAG: fetch top-20, rescore, return best 7
         chunks = query_index(message)
         sources = sorted({c["source"] for c in chunks})
 
-        context = (
+        vault_ctx = (
             "\n\n---\n\n".join(
                 f"[{c['source']}{'  §' + c['section'] if c.get('section') else ''}]\n{c['text']}"
                 for c in chunks
             )
             if chunks
-            else "No relevant context found in the wiki."
+            else "No relevant vault notes found."
         )
+
+        # Team notes keyword search
+        team_matches = _search_team_notes(message)
+        team_ctx_parts = [
+            f"[Team note by {n.created_by}: \"{n.title}\"]\n{(n.content or '')[:800]}"
+            for n in team_matches
+        ]
+        team_sources = [f"[team] {n.title}" for n in team_matches]
+
+        full_context = vault_ctx
+        if team_ctx_parts:
+            full_context += "\n\n=== Team Notes ===\n\n" + "\n\n---\n\n".join(team_ctx_parts)
 
         messages = [{"role": "system", "content": CHAT_SYSTEM}]
         messages.extend(history)
         messages.append({
             "role": "user",
-            "content": f"Wiki context:\n\n{context}\n\nQuestion: {message}",
+            "content": f"Context:\n\n{full_context}\n\nQuestion: {message}",
         })
 
         resp = client.chat.completions.create(model=MODEL, messages=messages)
@@ -415,7 +451,12 @@ def route_chat():
         suggestions = get_suggestions(answer)
 
         _log("chat", message)
-        return jsonify({"response": answer, "sources": sources, "suggestions": suggestions})
+        return jsonify({
+            "response": answer,
+            "sources": sources,
+            "team_sources": team_sources,
+            "suggestions": suggestions,
+        })
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -666,6 +707,477 @@ def route_activity():
                 pass
         entries.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
         return jsonify({"activity": entries})
+
+
+# ── team-note helpers ─────────────────────────────────────────────────────────
+
+def _user_role(username, db):
+    u = db.query(User).filter_by(username=username).first()
+    return u.role if u else ""
+
+
+def _tn_dict(note, db, comment_count=None):
+    if comment_count is None:
+        comment_count = db.query(TeamComment).filter_by(team_note_id=note.id).count()
+    return {
+        "id": note.id,
+        "title": note.title,
+        "created_by": note.created_by,
+        "creator_role": _user_role(note.created_by, db),
+        "created_at": note.created_at.isoformat() + "Z" if note.created_at else "",
+        "updated_at": note.updated_at.isoformat() + "Z" if note.updated_at else "",
+        "is_public": note.is_public,
+        "needs_help": note.needs_help,
+        "help_resolved": note.help_resolved,
+        "tags": note.tags_list(),
+        "linked_notes": note.linked_notes_list(),
+        "comment_count": comment_count,
+    }
+
+
+def _tn_full(note, db):
+    d = _tn_dict(note, db)
+    d["content"] = note.content or ""
+    comments = (
+        db.query(TeamComment)
+        .filter_by(team_note_id=note.id)
+        .order_by(TeamComment.created_at)
+        .all()
+    )
+    d["comments"] = [_comment_dict(c, db) for c in comments]
+    return d
+
+
+def _comment_dict(c, db):
+    return {
+        "id": c.id,
+        "team_note_id": c.team_note_id,
+        "content": c.content,
+        "created_by": c.created_by,
+        "creator_role": _user_role(c.created_by, db),
+        "created_at": c.created_at.isoformat() + "Z" if c.created_at else "",
+        "updated_at": c.updated_at.isoformat() + "Z" if c.updated_at else "",
+        "is_edited": c.is_edited,
+    }
+
+
+def _notify(user_id, type_, team_note_id, message):
+    if not user_id:
+        return
+    try:
+        db = SessionLocal()
+        db.add(Notification(
+            id=str(uuid.uuid4()),
+            user_id=user_id,
+            type=type_,
+            team_note_id=team_note_id,
+            message=message,
+        ))
+        db.commit()
+        db.close()
+    except Exception as e:
+        print(f"[notify] {e}")
+
+
+# ── team-note routes ──────────────────────────────────────────────────────────
+
+@app.route("/api/team-notes")
+@login_required
+def api_team_notes_list():
+    needs_help_only = request.args.get("needs_help") == "true"
+    tag_filter = request.args.get("tag", "").strip()
+    creator_filter = request.args.get("created_by", "").strip()
+    try:
+        from sqlalchemy import func as sqla_func, or_
+        db = SessionLocal()
+        q = db.query(TeamNote).filter(
+            or_(TeamNote.is_public == True, TeamNote.created_by == current_user.username)
+        )
+        if needs_help_only:
+            q = q.filter(TeamNote.needs_help == True, TeamNote.help_resolved == False)
+        if creator_filter:
+            q = q.filter(TeamNote.created_by == creator_filter)
+        notes = q.order_by(TeamNote.updated_at.desc()).all()
+
+        note_ids = [n.id for n in notes]
+        counts = dict(
+            db.query(TeamComment.team_note_id, sqla_func.count(TeamComment.id))
+            .filter(TeamComment.team_note_id.in_(note_ids))
+            .group_by(TeamComment.team_note_id)
+            .all()
+        ) if note_ids else {}
+
+        result = []
+        for n in notes:
+            if tag_filter and tag_filter not in n.tags_list():
+                continue
+            result.append(_tn_dict(n, db, counts.get(n.id, 0)))
+        db.close()
+        return jsonify({"notes": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/team-notes", methods=["POST"])
+@login_required
+@require_role("researcher", "admin")
+def api_team_note_create():
+    data = request.get_json(force=True)
+    title = (data.get("title") or "").strip()
+    if not title:
+        return jsonify({"error": "title is required"}), 400
+    tags = data.get("tags", [])
+    if isinstance(tags, str):
+        tags = [t.strip() for t in tags.split(",") if t.strip()]
+    try:
+        db = SessionLocal()
+        note = TeamNote(
+            id=str(uuid.uuid4()),
+            title=title,
+            content=data.get("content", ""),
+            created_by=current_user.username,
+            is_public=bool(data.get("is_public", True)),
+            needs_help=bool(data.get("needs_help", False)),
+            help_resolved=False,
+            tags=json.dumps(tags),
+            linked_notes=json.dumps(data.get("linked_notes", [])),
+        )
+        db.add(note)
+        db.commit()
+        result = _tn_full(note, db)
+        note_id = note.id
+        flag_help = note.needs_help
+        db.close()
+
+        _log("team_note_create", title)
+
+        if flag_help:
+            try:
+                db2 = SessionLocal()
+                users = db2.query(User).filter(
+                    User.username != current_user.username,
+                    User.role.in_(["researcher", "admin"]),
+                ).all()
+                db2.close()
+                for u in users:
+                    _notify(u.username, "new_help", note_id,
+                            f"{current_user.username} needs help with: {title}")
+            except Exception:
+                pass
+
+        return jsonify({"success": True, "note": result}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# Static segment — registered before /<note_id> so Flask routes it correctly
+@app.route("/api/team-notes/needs-help")
+@login_required
+def api_team_notes_needs_help():
+    try:
+        db = SessionLocal()
+        notes = (
+            db.query(TeamNote)
+            .filter(TeamNote.needs_help == True,
+                    TeamNote.help_resolved == False,
+                    TeamNote.is_public == True)
+            .order_by(TeamNote.updated_at.desc())
+            .limit(20)
+            .all()
+        )
+        result = [_tn_dict(n, db) for n in notes]
+        db.close()
+        return jsonify({"notes": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/team-notes/<note_id>")
+@login_required
+def api_team_note_get(note_id):
+    try:
+        db = SessionLocal()
+        note = db.query(TeamNote).filter_by(id=note_id).first()
+        if not note:
+            db.close()
+            return jsonify({"error": "Note not found"}), 404
+        if (not note.is_public
+                and note.created_by != current_user.username
+                and current_user.role != "admin"):
+            db.close()
+            return jsonify({"error": "Access denied"}), 403
+        result = _tn_full(note, db)
+        db.close()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/team-notes/<note_id>", methods=["PUT"])
+@login_required
+def api_team_note_update(note_id):
+    try:
+        db = SessionLocal()
+        note = db.query(TeamNote).filter_by(id=note_id).first()
+        if not note:
+            db.close()
+            return jsonify({"error": "Note not found"}), 404
+        if note.created_by != current_user.username and current_user.role != "admin":
+            db.close()
+            return jsonify({"error": "Not authorized"}), 403
+
+        data = request.get_json(force=True)
+        was_help = note.needs_help
+
+        if "title" in data:
+            note.title = (data["title"] or "").strip() or note.title
+        if "content" in data:
+            note.content = data["content"]
+        if "is_public" in data:
+            note.is_public = bool(data["is_public"])
+        if "tags" in data:
+            tags = data["tags"]
+            if isinstance(tags, str):
+                tags = [t.strip() for t in tags.split(",") if t.strip()]
+            note.tags = json.dumps(tags)
+        if "linked_notes" in data:
+            note.linked_notes = json.dumps(data["linked_notes"])
+        if "needs_help" in data:
+            note.needs_help = bool(data["needs_help"])
+        if "help_resolved" in data:
+            note.help_resolved = bool(data["help_resolved"])
+
+        note.updated_at = datetime.datetime.utcnow()
+        db.commit()
+        result = _tn_full(note, db)
+        newly_help = not was_help and note.needs_help
+        db.close()
+
+        if newly_help:
+            try:
+                db2 = SessionLocal()
+                users = db2.query(User).filter(
+                    User.username != current_user.username,
+                    User.role.in_(["researcher", "admin"]),
+                ).all()
+                db2.close()
+                for u in users:
+                    _notify(u.username, "new_help", note_id,
+                            f"{current_user.username} needs help with: {note.title}")
+            except Exception:
+                pass
+
+        _log("team_note_edit", note.title)
+        return jsonify({"success": True, "note": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/team-notes/<note_id>", methods=["DELETE"])
+@login_required
+@require_role("admin")
+def api_team_note_delete(note_id):
+    try:
+        db = SessionLocal()
+        note = db.query(TeamNote).filter_by(id=note_id).first()
+        if not note:
+            db.close()
+            return jsonify({"error": "Note not found"}), 404
+        title = note.title
+        db.query(TeamComment).filter_by(team_note_id=note_id).delete()
+        db.query(Notification).filter_by(team_note_id=note_id).delete()
+        db.delete(note)
+        db.commit()
+        db.close()
+        _log("team_note_delete", title)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/team-notes/<note_id>/comments", methods=["POST"])
+@login_required
+def api_add_comment(note_id):
+    try:
+        db = SessionLocal()
+        note = db.query(TeamNote).filter_by(id=note_id).first()
+        if not note:
+            db.close()
+            return jsonify({"error": "Note not found"}), 404
+        if (not note.is_public
+                and note.created_by != current_user.username
+                and current_user.role != "admin"):
+            db.close()
+            return jsonify({"error": "Access denied"}), 403
+
+        data = request.get_json(force=True)
+        content = (data.get("content") or "").strip()
+        if not content:
+            db.close()
+            return jsonify({"error": "content is required"}), 400
+
+        comment = TeamComment(
+            id=str(uuid.uuid4()),
+            team_note_id=note_id,
+            content=content,
+            created_by=current_user.username,
+        )
+        db.add(comment)
+        note.updated_at = datetime.datetime.utcnow()
+        db.commit()
+        result = _comment_dict(comment, db)
+        note_title = note.title
+        note_creator = note.created_by
+        db.close()
+
+        if note_creator != current_user.username:
+            _notify(note_creator, "new_comment", note_id,
+                    f"{current_user.username} commented on: {note_title}")
+
+        _log("team_note_comment", f"on: {note_title}")
+        return jsonify({"success": True, "comment": result}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/team-notes/<note_id>/comments/<comment_id>", methods=["PUT"])
+@login_required
+def api_edit_comment(note_id, comment_id):
+    try:
+        db = SessionLocal()
+        comment = db.query(TeamComment).filter_by(id=comment_id, team_note_id=note_id).first()
+        if not comment:
+            db.close()
+            return jsonify({"error": "Comment not found"}), 404
+        if comment.created_by != current_user.username and current_user.role != "admin":
+            db.close()
+            return jsonify({"error": "Not authorized"}), 403
+
+        data = request.get_json(force=True)
+        content = (data.get("content") or "").strip()
+        if not content:
+            db.close()
+            return jsonify({"error": "content is required"}), 400
+
+        comment.content = content
+        comment.is_edited = True
+        comment.updated_at = datetime.datetime.utcnow()
+        db.commit()
+        result = _comment_dict(comment, db)
+        db.close()
+        return jsonify({"success": True, "comment": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/team-notes/<note_id>/comments/<comment_id>", methods=["DELETE"])
+@login_required
+def api_delete_comment(note_id, comment_id):
+    try:
+        db = SessionLocal()
+        comment = db.query(TeamComment).filter_by(id=comment_id, team_note_id=note_id).first()
+        if not comment:
+            db.close()
+            return jsonify({"error": "Comment not found"}), 404
+        if comment.created_by != current_user.username and current_user.role != "admin":
+            db.close()
+            return jsonify({"error": "Not authorized"}), 403
+        db.delete(comment)
+        db.commit()
+        db.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/team-notes/<note_id>/resolve-help", methods=["POST"])
+@login_required
+@require_role("researcher", "admin")
+def api_resolve_help(note_id):
+    try:
+        db = SessionLocal()
+        note = db.query(TeamNote).filter_by(id=note_id).first()
+        if not note:
+            db.close()
+            return jsonify({"error": "Note not found"}), 404
+        note.needs_help = False
+        note.help_resolved = True
+        note.updated_at = datetime.datetime.utcnow()
+        db.commit()
+        note_title = note.title
+        note_creator = note.created_by
+        db.close()
+
+        if note_creator != current_user.username:
+            _notify(note_creator, "help_resolved", note_id,
+                    f"{current_user.username} resolved your help request: {note_title}")
+
+        _log("team_note_resolve", note_title)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── notifications ─────────────────────────────────────────────────────────────
+
+@app.route("/api/notifications")
+@login_required
+def api_notifications():
+    try:
+        db = SessionLocal()
+        notifs = (
+            db.query(Notification)
+            .filter_by(user_id=current_user.username, is_read=False)
+            .order_by(Notification.created_at.desc())
+            .limit(20)
+            .all()
+        )
+        result = [
+            {
+                "id": n.id,
+                "type": n.type,
+                "team_note_id": n.team_note_id,
+                "message": n.message,
+                "created_at": n.created_at.isoformat() + "Z" if n.created_at else "",
+            }
+            for n in notifs
+        ]
+        db.close()
+        return jsonify({"notifications": result})
+    except Exception as e:
+        return jsonify({"notifications": [], "error": str(e)})
+
+
+@app.route("/api/notifications/<notif_id>/read", methods=["POST"])
+@login_required
+def api_notification_read(notif_id):
+    try:
+        db = SessionLocal()
+        n = db.query(Notification).filter_by(
+            id=notif_id, user_id=current_user.username
+        ).first()
+        if n:
+            n.is_read = True
+            db.commit()
+        db.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/notifications/read-all", methods=["POST"])
+@login_required
+def api_notifications_read_all():
+    try:
+        db = SessionLocal()
+        db.query(Notification).filter_by(
+            user_id=current_user.username, is_read=False
+        ).update({"is_read": True})
+        db.commit()
+        db.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # ── run ───────────────────────────────────────────────────────────────────────
