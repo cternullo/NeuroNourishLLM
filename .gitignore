@@ -6,3 +6,4 @@ chroma_db/
 .DS_Store
 .obsidian/
 local.db
+activity_log.json
