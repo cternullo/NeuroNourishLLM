@@ -118,7 +118,11 @@ def gmail_oauth_callback():
     state = session.pop("gmail_oauth_state", None)
     try:
         flow = _build_flow(state=state)
-        flow.fetch_token(authorization_response=request.url)
+        # Railway reverse proxy strips HTTPS; normalize so token exchange matches registered URI
+        auth_response = request.url
+        if not auth_response.startswith("https") and GOOGLE_REDIRECT_URI.startswith("https"):
+            auth_response = auth_response.replace("http://", "https://", 1)
+        flow.fetch_token(authorization_response=auth_response)
         creds = flow.credentials
 
         import requests as http_req

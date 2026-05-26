@@ -2580,10 +2580,21 @@ async function loadGmailStatus() {
   const banner = document.getElementById('outreach-gmail-banner');
   if (!banner) return;
   try {
+    console.log('[gmail] loading status from /auth/gmail/status');
     const d = await apiFetch('/auth/gmail/status');
+    console.log('[gmail] status response:', d);
     gmailConnected = d.connected;
     gmailEmail = d.email || '';
-    if (d.connected) {
+    if (pendingGmailError) {
+      const msg = pendingGmailError === 'not_configured'
+        ? 'Gmail OAuth is not configured on this server. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your environment.'
+        : `Gmail OAuth error: ${pendingGmailError}`;
+      banner.className = 'outreach-gmail-banner error';
+      banner.innerHTML = `
+        <span class="gmail-banner-text">⚠ ${esc(msg)}</span>
+        <a href="/auth/gmail" class="gmail-banner-link btn btn-sm btn-ghost" style="text-decoration:none">Retry</a>`;
+      pendingGmailError = null;
+    } else if (d.connected) {
       banner.className = 'outreach-gmail-banner connected';
       banner.innerHTML = `
         <span class="gmail-banner-text">✓ Gmail connected: <strong>${esc(gmailEmail)}</strong></span>
@@ -2592,29 +2603,38 @@ async function loadGmailStatus() {
       banner.className = 'outreach-gmail-banner disconnected';
       banner.innerHTML = `
         <span class="gmail-banner-text">⚠ Connect your Gmail account to send emails</span>
-        <a href="/auth/gmail" class="gmail-banner-link btn btn-sm btn-ghost" style="text-decoration:none">Connect Gmail</a>`;
+        <a href="/auth/gmail" class="gmail-banner-link btn btn-sm btn-ghost" style="text-decoration:none" onclick="console.log('[gmail] Connect Gmail clicked, navigating to /auth/gmail')">Connect Gmail</a>`;
     }
-  } catch (_) {}
+  } catch (err) {
+    console.error('[gmail] status fetch failed:', err);
+  }
 }
 
 // Check URL params on load (OAuth callback redirects here)
+let pendingGmailError = null;
 (function checkGmailParams() {
   const params = new URLSearchParams(window.location.search);
-  if (params.get('gmail_connected')) {
-    // Switch to outreach tab and show success
+  const switchToOutreach = () => {
     const tab = document.querySelector('[data-panel="outreach"]');
+    console.log('[gmail] switching to outreach tab, found tab:', !!tab);
     if (tab) tab.click();
+  };
+  if (params.get('gmail_connected')) {
+    console.log('[gmail] oauth connected — switching to outreach tab');
+    switchToOutreach();
     window.history.replaceState({}, '', window.location.pathname);
   }
   if (params.get('gmail_disconnected')) {
+    console.log('[gmail] oauth disconnected — switching to outreach tab');
+    pendingGmailError = null;
+    switchToOutreach();
     window.history.replaceState({}, '', window.location.pathname);
   }
   if (params.get('gmail_error')) {
-    const banner = document.getElementById('outreach-gmail-banner');
-    if (banner) {
-      banner.className = 'outreach-gmail-banner error';
-      banner.innerHTML = `<span class="gmail-banner-text">Gmail error: ${esc(params.get('gmail_error'))}</span>`;
-    }
+    const errMsg = params.get('gmail_error');
+    console.log('[gmail] oauth error:', errMsg, '— switching to outreach tab');
+    pendingGmailError = errMsg;
+    switchToOutreach();
     window.history.replaceState({}, '', window.location.pathname);
   }
 })();
