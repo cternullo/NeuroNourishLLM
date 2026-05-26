@@ -50,7 +50,7 @@ from extensions import bcrypt, login_manager
 from ingest import ingest_doi, ingest_pdf, ingest_pubmed, ingest_topic, ingest_url, write_note
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
+app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key")
 CORS(app)
 
 bcrypt.init_app(app)
