@@ -30,6 +30,7 @@ import re
 import shutil
 import tempfile
 import uuid
+from datetime import timedelta
 from functools import wraps
 
 from flask import Flask, jsonify, redirect, render_template, request, url_for
@@ -51,11 +52,15 @@ from ingest import ingest_doi, ingest_pdf, ingest_pubmed, ingest_topic, ingest_u
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key")
+app.config["SESSION_PERMANENT"] = True
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
 CORS(app)
 
 bcrypt.init_app(app)
 login_manager.init_app(app)
 login_manager.login_view = "auth.login"
+# "strong" invalidates sessions on IP/user-agent change — breaks behind Railway's proxy
+login_manager.session_protection = "basic"
 
 app.register_blueprint(auth_bp)
 
