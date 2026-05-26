@@ -77,22 +77,26 @@ def logout():
 
 
 # ── Gmail OAuth ───────────────────────────────────────────────────────────────
+# Uses requests_oauthlib.OAuth2Session directly rather than google_auth_oauthlib
+# Flow, which in newer versions auto-injects a code_challenge (PKCE) into the
+# authorization URL. Because the callback constructs a fresh session object the
+# code_verifier is lost, causing invalid_grant. OAuth2Session never adds PKCE
+# unless you explicitly pass pkce='S256', so this is the safest approach.
 
-def _build_flow(state=None):
-    from google_auth_oauthlib.flow import Flow
-    client_config = {
-        "web": {
-            "client_id": GOOGLE_CLIENT_ID,
-            "client_secret": GOOGLE_CLIENT_SECRET,
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "redirect_uris": [GOOGLE_REDIRECT_URI],
-        }
-    }
-    kwargs = {"state": state} if state else {}
-    flow = Flow.from_client_config(client_config, scopes=GMAIL_SCOPES, **kwargs)
-    flow.redirect_uri = GOOGLE_REDIRECT_URI
-    return flow
+_GOOGLE_AUTH_URI  = "https://accounts.google.com/o/oauth2/auth"
+_GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token"
+_GOOGLE_REVOKE_URI = "https://oauth2.googleapis.com/revoke"
+_GOOGLE_USERINFO_URI = "https://www.googleapis.com/oauth2/v3/userinfo"
+
+
+def _make_oauth_session(state=None):
+    from requests_oauthlib import OAuth2Session
+    return OAuth2Session(
+        client_id=GOOGLE_CLIENT_ID,
+        scope=GMAIL_SCOPES,
+        redirect_uri=GOOGLE_REDIRECT_URI,
+        state=state,
+    )
 
 
 @auth_bp.route("/auth/gmail")
@@ -100,8 +104,10 @@ def _build_flow(state=None):
 def gmail_oauth_start():
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         return redirect("/?gmail_error=not_configured")
-    flow = _build_flow()
-    auth_url, state = flow.authorization_url(
+    oauth = _make_oauth_session()
+    # No code_challenge / code_verifier — plain authorization code grant
+    auth_url, state = oauth.authorization_url(
+        _GOOGLE_AUTH_URI,
         access_type="offline",
         include_granted_scopes="true",
         prompt="consent",
@@ -117,39 +123,49 @@ def gmail_oauth_callback():
         return redirect("/?gmail_error=not_configured")
     state = session.pop("gmail_oauth_state", None)
     try:
-        flow = _build_flow(state=state)
-        # Railway reverse proxy strips HTTPS; normalize so token exchange matches registered URI
+        oauth = _make_oauth_session(state=state)
+        # Railway reverse proxy strips HTTPS; normalize so redirect URI matches
         auth_response = request.url
         if not auth_response.startswith("https") and GOOGLE_REDIRECT_URI.startswith("https"):
             auth_response = auth_response.replace("http://", "https://", 1)
-        flow.fetch_token(authorization_response=auth_response)
-        creds = flow.credentials
+        # Plain code exchange — no code_verifier
+        token_data = oauth.fetch_token(
+            _GOOGLE_TOKEN_URI,
+            authorization_response=auth_response,
+            client_secret=GOOGLE_CLIENT_SECRET,
+        )
+
+        access_token = token_data.get("access_token", "")
+        refresh_token = token_data.get("refresh_token")
+        expiry = None
+        if token_data.get("expires_at"):
+            expiry = datetime.datetime.utcfromtimestamp(token_data["expires_at"])
 
         import requests as http_req
         ui = http_req.get(
-            "https://www.googleapis.com/oauth2/v3/userinfo",
-            headers={"Authorization": f"Bearer {creds.token}"},
+            _GOOGLE_USERINFO_URI,
+            headers={"Authorization": f"Bearer {access_token}"},
             timeout=8,
         )
         email_address = ui.json().get("email", "") if ui.ok else ""
 
         db = SessionLocal()
-        token = db.query(GmailToken).filter_by(user_id=current_user.username).first()
+        row = db.query(GmailToken).filter_by(user_id=current_user.username).first()
         now = datetime.datetime.utcnow()
-        if token:
-            token.access_token = creds.token
-            if creds.refresh_token:
-                token.refresh_token = creds.refresh_token
-            token.token_expiry = creds.expiry
-            token.email_address = email_address
-            token.updated_at = now
+        if row:
+            row.access_token = access_token
+            if refresh_token:
+                row.refresh_token = refresh_token
+            row.token_expiry = expiry
+            row.email_address = email_address
+            row.updated_at = now
         else:
             db.add(GmailToken(
                 id=str(uuid.uuid4()),
                 user_id=current_user.username,
-                access_token=creds.token,
-                refresh_token=creds.refresh_token,
-                token_expiry=creds.expiry,
+                access_token=access_token,
+                refresh_token=refresh_token,
+                token_expiry=expiry,
                 email_address=email_address,
             ))
         db.commit()
