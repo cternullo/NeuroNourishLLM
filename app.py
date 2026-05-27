@@ -684,6 +684,20 @@ def api_note_delete(note_id):
     return jsonify({"success": True})
 
 
+# ── ONE-TIME CLEANUP ROUTE — remove after use ─────────────────────────────────
+@app.route("/api/admin/cleanup-vault", methods=["POST"])
+@login_required
+@require_role("admin")
+def api_admin_cleanup_vault():
+    from cleanup_vault import run_cleanup, IRRELEVANT_KEYWORDS
+    global _biomarker_cache
+    deleted = run_cleanup(VAULT_WIKI_PATH, IRRELEVANT_KEYWORDS)
+    _biomarker_cache = None
+    _log("admin_cleanup_vault", f"deleted {len(deleted)} notes")
+    return jsonify({"deleted": deleted, "count": len(deleted)})
+# ──────────────────────────────────────────────────────────────────────────────
+
+
 @app.route("/api/notes/<path:note_id>/reindex", methods=["POST"])
 @login_required
 @require_role("researcher", "admin")
