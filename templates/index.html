@@ -330,46 +330,97 @@ html, body {
 .filter-select:focus { border-color: var(--accent); }
 .vault-count { font-size: 11px; color: var(--text-muted); margin-left: auto; }
 
-.vault-grid {
-  flex: 1; overflow-y: auto; padding: 16px 24px;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px; align-content: start;
+.vault-body {
+  display: flex; flex: 1; min-height: 0; overflow: hidden;
 }
-.vault-grid::-webkit-scrollbar { width: 5px; }
-.vault-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-.vault-card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-  padding: 14px 16px; cursor: pointer; transition: border-color 0.15s;
-  display: flex; flex-direction: column; gap: 7px;
+.vault-list {
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-width: 0;
 }
-.vault-card:hover { border-color: var(--accent); }
+.vault-list::-webkit-scrollbar { width: 5px; }
+.vault-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-.vault-card-head { display: flex; align-items: center; gap: 6px; }
-.vault-card-year { font-size: 11px; color: var(--text-muted); }
-.vault-card-wc   { font-size: 11px; color: var(--text-muted); margin-left: auto; }
-.vault-card-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
-.vault-card-meta {
+.vault-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 11px 20px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background 0.12s; position: relative;
+}
+.vault-row:hover { background: var(--surface2); }
+.vault-row-left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.vault-row-top  { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.vault-row-title {
+  font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.vault-row-authors {
   font-size: 11px; color: var(--text-muted);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px;
 }
-.vault-card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.vault-row-mid {
+  flex-shrink: 0; display: flex; flex-direction: column; gap: 2px;
+  align-items: flex-end; min-width: 110px;
+}
+.vault-row-journal {
+  font-size: 11px; color: var(--text-muted); text-align: right;
+  max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vault-row-wc { font-size: 10px; color: var(--text-muted); }
+.vault-row-right {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end;
+  gap: 5px; min-width: 90px;
+}
+.vault-row-tags { display: flex; flex-wrap: wrap; gap: 3px; justify-content: flex-end; }
+.vault-row-date { font-size: 10px; color: var(--text-muted); }
+.vault-trash-btn {
+  background: none; border: none; cursor: pointer; padding: 2px 5px;
+  color: var(--text-muted); font-size: 13px; border-radius: 4px;
+  opacity: 0; transition: opacity 0.15s, color 0.15s; line-height: 1;
+}
+.vault-row:hover .vault-trash-btn { opacity: 1; }
+.vault-trash-btn:hover { color: var(--error); }
+
 .tag-chip {
   display: inline-block; padding: 1px 6px; border-radius: 3px;
   font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
 }
 .tag-biomarker { background: #1a1030; color: #a070e8; }
 .tag-condition  { background: #0a2010; color: #60b870; }
-.vault-card-footer {
-  display: flex; justify-content: space-between; align-items: center; margin-top: 2px;
+.tag-more       { background: var(--surface3); color: var(--text-muted); }
+
+.vault-empty   { padding: 48px 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
+.vault-loading { padding: 48px 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+/* Vault detail panel */
+.vault-detail-panel {
+  width: 0; flex-shrink: 0; overflow: hidden; transition: width 0.2s ease;
+  border-left: 1px solid transparent; display: flex; flex-direction: column;
+  background: var(--bg);
 }
-.vault-card-date { font-size: 10px; color: var(--text-muted); }
-.vault-card-by   { font-size: 10px; color: var(--text-muted); }
-.vault-empty {
-  grid-column: 1 / -1; padding: 48px 20px;
-  text-align: center; color: var(--text-muted); font-size: 13px;
+.vault-detail-panel.open { width: 420px; border-left-color: var(--border); }
+.vault-detail-head {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; gap: 10px; flex-shrink: 0;
 }
-.vault-loading { grid-column: 1 / -1; padding: 48px 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
+.vault-detail-head-info { flex: 1; min-width: 0; }
+.vault-detail-title { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.4; }
+.vault-detail-byline { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.vault-detail-close {
+  background: none; border: none; cursor: pointer; color: var(--text-muted);
+  font-size: 20px; padding: 0 2px; line-height: 1; flex-shrink: 0;
+}
+.vault-detail-close:hover { color: var(--text); }
+.vault-detail-tags {
+  padding: 10px 20px; border-bottom: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; gap: 5px; flex-shrink: 0;
+}
+.vault-detail-body {
+  flex: 1; overflow-y: auto; padding: 16px 20px; font-size: 13px; line-height: 1.65;
+}
+.vault-detail-body::-webkit-scrollbar { width: 5px; }
+.vault-detail-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.vault-detail-foot {
+  padding: 12px 20px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+}
 
 /* ── Chat panel ──────────────────────────────────────────────────── */
 
@@ -588,7 +639,10 @@ html, body {
   .chat-bar { padding: 10px 14px; position: sticky; bottom: 0; }
   .ingest-card { padding: 14px; }
   .vault-toolbar { padding: 12px 14px 10px; }
-  .vault-grid { padding: 12px 14px; grid-template-columns: 1fr; }
+  .vault-row { padding: 10px 14px; gap: 10px; }
+  .vault-row-mid { min-width: 80px; }
+  .vault-row-right { min-width: 70px; }
+  .vault-detail-panel.open { width: 100%; position: absolute; top: 0; left: 0; height: 100%; z-index: 10; }
   .vault-filters { gap: 6px; }
   .filter-select { font-size: 11px; padding: 5px 8px; }
   .modal { width: 96vw; max-height: 96vh; }
@@ -918,6 +972,23 @@ html, body {
   </div>
 </div>
 
+<!-- Vault note delete confirmation modal -->
+<div class="overlay hidden" id="vault-delete-overlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head">
+      <h2>Delete Note</h2>
+      <button class="modal-x" id="vault-delete-close">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:20px 22px">
+      <p id="vault-delete-msg" style="font-size:13px;color:var(--text);margin:0"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="vault-delete-confirm-btn">Delete</button>
+      <button class="btn btn-sm btn-ghost" id="vault-delete-cancel-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Send email confirmation modal -->
 <div class="overlay hidden" id="send-confirm-overlay">
   <div class="modal" style="max-width:460px">
@@ -1131,8 +1202,25 @@ html, body {
             <span id="vault-count" class="vault-count"></span>
           </div>
         </div>
-        <div class="vault-grid" id="vault-grid">
-          <div class="vault-loading">Loading notes…</div>
+        <div class="vault-body" id="vault-body" style="position:relative">
+          <div class="vault-list" id="vault-grid">
+            <div class="vault-loading">Loading notes…</div>
+          </div>
+          <div class="vault-detail-panel" id="vault-detail-panel">
+            <div class="vault-detail-head">
+              <div class="vault-detail-head-info">
+                <div class="vault-detail-title" id="vd-title"></div>
+                <div class="vault-detail-byline" id="vd-byline"></div>
+              </div>
+              <button class="vault-detail-close" id="vault-detail-close" title="Close">&times;</button>
+            </div>
+            <div class="vault-detail-tags" id="vd-tags"></div>
+            <div class="vault-detail-body" id="vd-body"><div style="color:var(--text-muted)">Loading…</div></div>
+            <div class="vault-detail-foot">
+              <button class="btn btn-sm btn-ghost hidden" id="vd-edit-btn">Edit</button>
+              <button class="btn btn-sm btn-danger hidden" id="vd-delete-btn">Delete</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1260,7 +1348,7 @@ const esc = escHtml;
 
 function relTime(iso) {
   const d = new Date(iso);
-  if (!iso || isNaN(d)) return 'Unknown date';
+  if (!iso || isNaN(d)) return '';
   const diff = (Date.now() - d) / 1000;
   if (diff < 60)     return 'just now';
   if (diff < 3600)   { const m = Math.floor(diff/60);   return m + ' min'  + (m  > 1 ? 's':'') + ' ago'; }
@@ -1271,7 +1359,7 @@ function relTime(iso) {
 
 function fmtDate(iso) {
   const d = new Date(iso);
-  if (!iso || isNaN(d)) return 'Unknown date';
+  if (!iso || isNaN(d)) return '';
   const diff = (Date.now() - d) / 1000;
   if (diff < 60)    return 'just now';
   if (diff < 3600)  return Math.floor(diff/60) + 'm ago';
@@ -1847,11 +1935,11 @@ function renderVaultNotes() {
   const grid = document.getElementById('vault-grid');
   if (!grid) return;
 
-  const search    = (document.getElementById('vault-search')?.value || '').toLowerCase();
-  const typeF     = document.getElementById('filter-type')?.value || '';
-  const bioF      = document.getElementById('filter-biomarker')?.value || '';
-  const condF     = document.getElementById('filter-condition')?.value || '';
-  const yearF     = document.getElementById('filter-year')?.value || '';
+  const search = (document.getElementById('vault-search')?.value || '').toLowerCase();
+  const typeF  = document.getElementById('filter-type')?.value || '';
+  const bioF   = document.getElementById('filter-biomarker')?.value || '';
+  const condF  = document.getElementById('filter-condition')?.value || '';
+  const yearF  = document.getElementById('filter-year')?.value || '';
 
   const filtered = vaultNotes.filter(n => {
     if (typeF && n.source_type !== typeF) return false;
@@ -1876,34 +1964,157 @@ function renderVaultNotes() {
     return;
   }
 
+  const canDelete = CURRENT_ROLE === 'admin';
+
   grid.innerHTML = filtered.map(n => {
-    const bio = (n.biomarkers || []).map(b => `<span class="tag-chip tag-biomarker">${esc(b)}</span>`).join('');
-    const cond = (n.conditions || []).map(c => `<span class="tag-chip tag-condition">${esc(c)}</span>`).join('');
-    const tags = bio + cond;
-    const badge = TYPE_BADGE[n.source_type] || TYPE_BADGE.wiki;
-    const authors = (n.authors || []).slice(0,2).join(', ') + ((n.authors||[]).length > 2 ? ' et al.' : '');
-    const meta = [authors, n.journal].filter(Boolean).join(' · ');
+    const badge   = TYPE_BADGE[n.source_type] || TYPE_BADGE.wiki;
+    const title   = n.title || n.filename.replace('.md','').replace(/_/g,' ');
+    const authors = (n.authors || []).slice(0, 3).join(', ')
+                    + ((n.authors||[]).length > 3 ? ' et al.' : '');
+    const authorStr = authors.length > 40 ? authors.slice(0, 40) + '…' : authors;
+
+    const allBio  = n.biomarkers || [];
+    const shown   = allBio.slice(0, 3);
+    const extra   = allBio.length - shown.length;
+    const tags    = shown.map(b => `<span class="tag-chip tag-biomarker">${esc(b)}</span>`).join('')
+                  + (extra > 0 ? `<span class="tag-chip tag-more">+${extra}</span>` : '');
+
+    const dateStr = fmtDate(n.modified);
+    const trashBtn = canDelete
+      ? `<button class="vault-trash-btn" data-file="${esc(n.filename)}" data-title="${esc(title)}" title="Delete note">🗑</button>`
+      : '';
+
     return `
-      <div class="vault-card" data-file="${esc(n.filename)}">
-        <div class="vault-card-head">
-          ${badge}
-          ${n.year ? `<span class="vault-card-year">${esc(n.year)}</span>` : ''}
-          <span class="vault-card-wc">${n.word_count} w</span>
+      <div class="vault-row" data-file="${esc(n.filename)}">
+        <div class="vault-row-left">
+          <div class="vault-row-top">
+            ${badge}
+            <span class="vault-row-title">${esc(title)}</span>
+          </div>
+          ${authorStr ? `<div class="vault-row-authors">${esc(authorStr)}</div>` : ''}
         </div>
-        <div class="vault-card-title">${esc(n.title || n.filename.replace('.md','').replace(/_/g,' '))}</div>
-        ${meta ? `<div class="vault-card-meta">${esc(meta)}</div>` : ''}
-        ${tags ? `<div class="vault-card-tags">${tags}</div>` : ''}
-        <div class="vault-card-footer">
-          <span class="vault-card-date">${fmtDate(n.modified)}</span>
-          ${n.created_by ? `<span class="vault-card-by">by ${esc(n.created_by)}</span>` : ''}
+        <div class="vault-row-mid">
+          ${n.journal ? `<div class="vault-row-journal">${esc(n.journal)}</div>` : ''}
+          <div class="vault-row-wc">${n.word_count ? n.word_count + ' w' : ''}${n.year ? (n.word_count ? ' · ' : '') + esc(n.year) : ''}</div>
+        </div>
+        <div class="vault-row-right">
+          ${tags ? `<div class="vault-row-tags">${tags}</div>` : ''}
+          ${dateStr ? `<div class="vault-row-date">${dateStr}</div>` : ''}
+          ${trashBtn}
         </div>
       </div>`;
   }).join('');
 
-  grid.querySelectorAll('.vault-card').forEach(el =>
-    el.addEventListener('click', () => openNote(el.dataset.file))
-  );
+  grid.querySelectorAll('.vault-row').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('.vault-trash-btn')) return;
+      openVaultDetail(el.dataset.file);
+    });
+  });
+  grid.querySelectorAll('.vault-trash-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      vaultDeleteNote(btn.dataset.file, btn.dataset.title);
+    });
+  });
 }
+
+// ─────────────────────────────────────────────────────────────
+// Vault detail panel
+// ─────────────────────────────────────────────────────────────
+let _vaultDetailFile = null;
+
+async function openVaultDetail(filename) {
+  _vaultDetailFile = filename;
+  const panel = document.getElementById('vault-detail-panel');
+  const body  = document.getElementById('vd-body');
+  const note  = vaultNotes.find(n => n.filename === filename);
+
+  document.getElementById('vd-title').textContent   = note ? (note.title || filename.replace('.md','').replace(/_/g,' ')) : filename;
+  const bylineParts = [];
+  if (note?.authors?.length) bylineParts.push((note.authors.slice(0,3).join(', ')) + (note.authors.length > 3 ? ' et al.' : ''));
+  if (note?.journal) bylineParts.push(note.journal);
+  if (note?.year)    bylineParts.push(note.year);
+  document.getElementById('vd-byline').textContent = bylineParts.join(' · ');
+
+  const tagsEl = document.getElementById('vd-tags');
+  const bioTags  = (note?.biomarkers || []).map(b => `<span class="tag-chip tag-biomarker">${esc(b)}</span>`).join('');
+  const condTags = (note?.conditions  || []).map(c => `<span class="tag-chip tag-condition">${esc(c)}</span>`).join('');
+  tagsEl.innerHTML = bioTags + condTags || '<span style="color:var(--text-muted);font-size:11px">No tags</span>';
+
+  document.getElementById('vd-edit-btn').classList.toggle('hidden',
+    CURRENT_ROLE !== 'researcher' && CURRENT_ROLE !== 'admin');
+  document.getElementById('vd-delete-btn').classList.toggle('hidden', CURRENT_ROLE !== 'admin');
+
+  body.innerHTML = '<div style="color:var(--text-muted);font-size:12px">Loading…</div>';
+  panel.classList.add('open');
+
+  try {
+    const d = await apiFetch('/api/notes/' + encodeURIComponent(filename));
+    body.innerHTML = mdToHtml(d.content || '');
+  } catch (_) {
+    body.innerHTML = '<div style="color:var(--error);font-size:12px">Failed to load note.</div>';
+  }
+}
+
+function closeVaultDetail() {
+  _vaultDetailFile = null;
+  document.getElementById('vault-detail-panel')?.classList.remove('open');
+}
+
+document.getElementById('vault-detail-close')?.addEventListener('click', closeVaultDetail);
+
+document.getElementById('vd-edit-btn')?.addEventListener('click', () => {
+  if (_vaultDetailFile) openNote(_vaultDetailFile);
+});
+
+document.getElementById('vd-delete-btn')?.addEventListener('click', () => {
+  if (!_vaultDetailFile) return;
+  const note = vaultNotes.find(n => n.filename === _vaultDetailFile);
+  const title = note?.title || _vaultDetailFile;
+  vaultDeleteNote(_vaultDetailFile, title);
+});
+
+// ─────────────────────────────────────────────────────────────
+// Vault delete confirmation
+// ─────────────────────────────────────────────────────────────
+let _pendingDeleteFile = null;
+
+function vaultDeleteNote(filename, title) {
+  _pendingDeleteFile = filename;
+  document.getElementById('vault-delete-msg').textContent =
+    `Are you sure you want to delete "${title}"? This cannot be undone.`;
+  document.getElementById('vault-delete-overlay').classList.remove('hidden');
+}
+
+document.getElementById('vault-delete-close')?.addEventListener('click', () => {
+  document.getElementById('vault-delete-overlay').classList.add('hidden');
+  _pendingDeleteFile = null;
+});
+document.getElementById('vault-delete-cancel-btn')?.addEventListener('click', () => {
+  document.getElementById('vault-delete-overlay').classList.add('hidden');
+  _pendingDeleteFile = null;
+});
+document.getElementById('vault-delete-confirm-btn')?.addEventListener('click', async () => {
+  if (!_pendingDeleteFile) return;
+  const file = _pendingDeleteFile;
+  document.getElementById('vault-delete-overlay').classList.add('hidden');
+  _pendingDeleteFile = null;
+  try {
+    const d = await apiFetch('/api/notes/' + encodeURIComponent(file), { method: 'DELETE' });
+    if (d.success) {
+      vaultNotes = vaultNotes.filter(n => n.filename !== file);
+      if (_vaultDetailFile === file) closeVaultDetail();
+      populateVaultFilters(vaultNotes);
+      renderVaultNotes();
+      loadNotes();
+    } else {
+      alert('Delete failed: ' + (d.error || 'Unknown error'));
+    }
+  } catch (e) {
+    alert('Delete failed: ' + e.message);
+  }
+});
 
 // Filter event listeners
 ['vault-search','filter-type','filter-biomarker','filter-condition','filter-year'].forEach(id => {

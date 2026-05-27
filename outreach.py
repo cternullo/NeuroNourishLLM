@@ -35,7 +35,7 @@ def _pubmed_search(topic: str, max_results: int) -> list:
         return []
     papers = []
     try:
-        handle = Entrez.esearch(db="pubmed", term=topic, retmax=max_results, sort="relevance")
+        handle = Entrez.esearch(db="pubmed", term=f"{topic}[Title/Abstract]", retmax=max_results, sort="relevance")
         record = Entrez.read(handle)
         handle.close()
         ids = record.get("IdList", [])
