@@ -684,6 +684,30 @@ def api_note_delete(note_id):
     return jsonify({"success": True})
 
 
+# ── ONE-TIME BOOTSTRAP ROUTE — remove after use ───────────────────────────────
+# TODO: remove /api/admin/create-admin once first admin account is created
+@app.route("/api/admin/create-admin", methods=["POST"])
+def api_admin_create_admin():
+    admin_username = os.environ.get("DEFAULT_ADMIN_USERNAME", "admin")
+    admin_password = os.environ.get("DEFAULT_ADMIN_PASSWORD")
+    if not admin_password:
+        return jsonify({"error": "DEFAULT_ADMIN_PASSWORD is not set"}), 500
+    try:
+        db = SessionLocal()
+        existing = db.query(User).filter_by(role="admin").first()
+        if existing:
+            db.close()
+            return jsonify({"exists": True, "username": existing.username})
+        pw_hash = bcrypt.generate_password_hash(admin_password).decode("utf-8")
+        db.add(User(username=admin_username, password_hash=pw_hash, role="admin"))
+        db.commit()
+        db.close()
+        return jsonify({"created": True, "username": admin_username})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+# ──────────────────────────────────────────────────────────────────────────────
+
+
 # ── ONE-TIME CLEANUP ROUTE — remove after use ─────────────────────────────────
 @app.route("/api/admin/cleanup-vault", methods=["POST"])
 @login_required
