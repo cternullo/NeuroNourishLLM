@@ -1259,20 +1259,24 @@ function escHtml(s) {
 const esc = escHtml;
 
 function relTime(iso) {
-  const diff = (Date.now() - new Date(iso)) / 1000;
+  const d = new Date(iso);
+  if (!iso || isNaN(d)) return 'Unknown date';
+  const diff = (Date.now() - d) / 1000;
   if (diff < 60)     return 'just now';
   if (diff < 3600)   { const m = Math.floor(diff/60);   return m + ' min'  + (m  > 1 ? 's':'') + ' ago'; }
   if (diff < 86400)  { const h = Math.floor(diff/3600); return h + ' hour' + (h  > 1 ? 's':'') + ' ago'; }
   if (diff < 172800) return 'Yesterday';
-  return new Date(iso).toLocaleDateString('en', { month:'short', day:'numeric' });
+  return d.toLocaleDateString('en', { month:'short', day:'numeric' });
 }
 
 function fmtDate(iso) {
-  const diff = (Date.now() - new Date(iso)) / 1000;
+  const d = new Date(iso);
+  if (!iso || isNaN(d)) return 'Unknown date';
+  const diff = (Date.now() - d) / 1000;
   if (diff < 60)    return 'just now';
   if (diff < 3600)  return Math.floor(diff/60) + 'm ago';
   if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
-  return new Date(iso).toLocaleDateString('en', { month:'short', day:'numeric' });
+  return d.toLocaleDateString('en', { month:'short', day:'numeric' });
 }
 
 // ─────────────────────────────────────────────────────────────

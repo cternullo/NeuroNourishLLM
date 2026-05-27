@@ -549,7 +549,7 @@ def route_notes():
             mtime = datetime.datetime.utcfromtimestamp(os.path.getmtime(path))
             notes.append({
                 "filename": f,
-                "modified": mtime.isoformat() + "Z",
+                "modified": mtime.strftime("%Y-%m-%dT%H:%M:%S") + "Z",
                 "source_type": note_types.get(f, "wiki"),
             })
         return jsonify({"notes": notes})
@@ -606,12 +606,12 @@ def api_notes_list():
                 "conditions": fm.get("conditions") or [],
                 "created_by": fm.get("created_by") or (db_n.created_by if db_n else ""),
                 "created_at": (
-                    db_n.created_at.isoformat() + "Z"
+                    db_n.created_at.strftime("%Y-%m-%dT%H:%M:%S") + "Z"
                     if db_n and db_n.created_at
-                    else mtime.isoformat() + "Z"
+                    else mtime.strftime("%Y-%m-%dT%H:%M:%S") + "Z"
                 ),
                 "word_count": word_count,
-                "modified": mtime.isoformat() + "Z",
+                "modified": mtime.strftime("%Y-%m-%dT%H:%M:%S") + "Z",
             })
         return jsonify({"notes": notes})
     except Exception as e:

@@ -126,7 +126,7 @@ def _build_frontmatter(meta: dict) -> str:
         f"biomarkers: {_yaml_list(meta.get('biomarkers', []))}",
         f"conditions: {_yaml_list(meta.get('conditions', []))}",
         f"created_by: {_yaml_str(meta.get('created_by', ''))}",
-        f"created_at: {datetime.datetime.utcnow().isoformat()}",
+        f"created_at: \"{datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')}\"",
         "---",
         "",
     ]
