@@ -661,12 +661,33 @@ def api_note_update(note_id):
 
 @app.route("/api/notes/<path:note_id>", methods=["DELETE"])
 @login_required
-@require_role("admin")
+@require_role("researcher", "admin")
 def api_note_delete(note_id):
     safe = os.path.basename(note_id)
     path = os.path.join(VAULT_WIKI_PATH, safe)
     if not os.path.isfile(path):
         return jsonify({"error": "Note not found"}), 404
+
+    if current_user.role != "admin":
+        # Researchers may only delete notes they created
+        created_by = ""
+        try:
+            db = SessionLocal()
+            row = db.query(Note).filter_by(filename=safe).first()
+            db.close()
+            created_by = row.created_by if row else ""
+        except Exception:
+            pass
+        if not created_by:
+            # Fall back to frontmatter
+            try:
+                with open(path, encoding="utf-8") as f:
+                    created_by = _parse_frontmatter(f.read()).get("created_by", "")
+            except Exception:
+                pass
+        if created_by != current_user.username:
+            return jsonify({"error": "You can only delete notes you created."}), 403
+
     os.remove(path)
     try:
         db = SessionLocal()

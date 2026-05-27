@@ -1964,8 +1964,6 @@ function renderVaultNotes() {
     return;
   }
 
-  const canDelete = CURRENT_ROLE === 'admin';
-
   grid.innerHTML = filtered.map(n => {
     const badge   = TYPE_BADGE[n.source_type] || TYPE_BADGE.wiki;
     const title   = n.title || n.filename.replace('.md','').replace(/_/g,' ');
@@ -1980,6 +1978,8 @@ function renderVaultNotes() {
                   + (extra > 0 ? `<span class="tag-chip tag-more">+${extra}</span>` : '');
 
     const dateStr = fmtDate(n.modified);
+    const canDelete = CURRENT_ROLE === 'admin'
+      || (CURRENT_ROLE === 'researcher' && (n.created_by || '') === CURRENT_USER);
     const trashBtn = canDelete
       ? `<button class="vault-trash-btn" data-file="${esc(n.filename)}" data-title="${esc(title)}" title="Delete note">🗑</button>`
       : '';
@@ -2042,9 +2042,11 @@ async function openVaultDetail(filename) {
   const condTags = (note?.conditions  || []).map(c => `<span class="tag-chip tag-condition">${esc(c)}</span>`).join('');
   tagsEl.innerHTML = bioTags + condTags || '<span style="color:var(--text-muted);font-size:11px">No tags</span>';
 
-  document.getElementById('vd-edit-btn').classList.toggle('hidden',
-    CURRENT_ROLE !== 'researcher' && CURRENT_ROLE !== 'admin');
-  document.getElementById('vd-delete-btn').classList.toggle('hidden', CURRENT_ROLE !== 'admin');
+  const canEdit   = CURRENT_ROLE === 'researcher' || CURRENT_ROLE === 'admin';
+  const canDelete = CURRENT_ROLE === 'admin'
+    || (CURRENT_ROLE === 'researcher' && (note?.created_by || '') === CURRENT_USER);
+  document.getElementById('vd-edit-btn').classList.toggle('hidden', !canEdit);
+  document.getElementById('vd-delete-btn').classList.toggle('hidden', !canDelete);
 
   body.innerHTML = '<div style="color:var(--text-muted);font-size:12px">Loading…</div>';
   panel.classList.add('open');
