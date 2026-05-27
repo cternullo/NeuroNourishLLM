@@ -37,14 +37,43 @@ SYSTEM_PROMPT = (
     "Do not invent facts. Only use what is in the provided content."
 )
 
-BIOMARKER_TAGS = [
-    "ApoB", "Lp(a)", "LDL-C", "HDL-C", "total cholesterol", "triglycerides",
-]
+BIOMARKER_SYNONYMS = {
+    "glutathione":       ["glutathione", "GSH", "GSSG"],
+    "hsCRP":             ["hsCRP", "CRP", "C-reactive protein", "c reactive protein"],
+    "omega-3":           ["omega-3", "DHA", "EPA", "omega 3", "n-3 fatty acids"],
+    "homocysteine":      ["homocysteine", "Hcy"],
+    "LDL-C":             ["LDL-C", "LDL cholesterol", "low-density lipoprotein"],
+    "HDL-C":             ["HDL-C", "HDL cholesterol", "high-density lipoprotein"],
+    "total cholesterol": ["total cholesterol", "TC"],
+    "triglycerides":     ["triglycerides", "TG", "triacylglycerol"],
+    "ApoB":              ["ApoB", "apolipoprotein B", "Apolipoprotein B"],
+    "Lp(a)":             ["Lp(a)", "lipoprotein a", "lipoprotein(a)"],
+    "BDNF":              ["BDNF", "brain-derived neurotrophic factor"],
+    "HbA1c":             ["HbA1c", "glycated haemoglobin", "glycated hemoglobin", "A1c"],
+    "fasting insulin":   ["fasting insulin", "insulin resistance", "HOMA-IR"],
+    "cortisol":          ["cortisol", "HPA axis"],
+    "IL-6":              ["IL-6", "interleukin-6", "interleukin 6"],
+    "TNF-alpha":         ["TNF-alpha", "TNF-α", "tumor necrosis factor"],
+    "vitamin D":         ["vitamin D", "25-hydroxyvitamin D", "25(OH)D", "cholecalciferol"],
+    "folate":            ["folate", "folic acid", "vitamin B9"],
+    "vitamin B12":       ["vitamin B12", "cobalamin", "B12"],
+    "ferritin":          ["ferritin", "serum ferritin"],
+}
 
-CONDITION_TAGS = [
-    "Alzheimer's disease", "dementia", "cognitive decline",
-    "vascular dementia", "cardiovascular disease",
-]
+CONDITION_SYNONYMS = {
+    "Alzheimer's disease":      ["Alzheimer's disease", "Alzheimer's", "AD", "Alzheimer disease"],
+    "dementia":                  ["dementia", "dementia diagnosis"],
+    "cognitive decline":         ["cognitive decline", "cognitive deterioration"],
+    "cognitive impairment":      ["cognitive impairment", "cognitively impaired"],
+    "mild cognitive impairment": ["mild cognitive impairment", "MCI"],
+    "vascular dementia":         ["vascular dementia", "VaD"],
+    "executive function":        ["executive function", "executive dysfunction"],
+    "memory loss":               ["memory loss", "memory impairment", "amnesia"],
+    "neurodegeneration":         ["neurodegeneration", "neurodegenerative"],
+    "cardiovascular disease":    ["cardiovascular disease", "CVD", "coronary artery disease", "CAD"],
+    "oxidative stress":          ["oxidative stress", "ROS", "reactive oxygen species"],
+    "neuroinflammation":         ["neuroinflammation", "neuroinflammatory"],
+}
 
 MAX_WORDS = 3000
 
@@ -52,12 +81,19 @@ MAX_WORDS = 3000
 # ── Tag detection ─────────────────────────────────────────────────────────────
 
 def _detect_tags(text: str) -> dict:
-    """Return lists of matched biomarker and condition tags (case-insensitive)."""
+    """Return canonical biomarker and condition tags matched via synonym lookup."""
     lower = text.lower()
-    return {
-        "biomarkers": [t for t in BIOMARKER_TAGS if t.lower() in lower],
-        "conditions": [t for t in CONDITION_TAGS if t.lower() in lower],
-    }
+    biomarkers = [
+        canonical
+        for canonical, synonyms in BIOMARKER_SYNONYMS.items()
+        if any(s.lower() in lower for s in synonyms)
+    ]
+    conditions = [
+        canonical
+        for canonical, synonyms in CONDITION_SYNONYMS.items()
+        if any(s.lower() in lower for s in synonyms)
+    ]
+    return {"biomarkers": biomarkers, "conditions": conditions}
 
 
 # ── YAML frontmatter ──────────────────────────────────────────────────────────
@@ -341,8 +377,9 @@ def ingest_pubmed(pmid: str, created_by: str = "") -> str:
     print(f"[ingest_pubmed] Fetching PMID: {pmid}")
     meta = _fetch_pubmed_meta(pmid)
 
+    no_abstract = not meta["abstract"].strip()
     content = f"Title: {meta['title']}\n\nAbstract: {meta['abstract']}"
-    if not meta["abstract"].strip():
+    if no_abstract:
         print("[ingest_pubmed] No abstract — using title/journal only.")
         content = f"Title: {meta['title']}\nJournal: {meta['journal']}\nYear: {meta['year']}"
 
@@ -350,6 +387,13 @@ def ingest_pubmed(pmid: str, created_by: str = "") -> str:
     markdown, n_chunks = _llm_to_markdown_chunked(
         content, f"PubMed PMID {pmid} — {meta['title']}"
     )
+
+    if no_abstract:
+        markdown = (
+            "> ⚠️ No abstract available via CrossRef. This note is based on title and journal "
+            "metadata only. Consider uploading the full PDF for complete coverage.\n\n"
+            + markdown
+        )
 
     tags = _detect_tags(content + " " + markdown)
     frontmatter = _build_frontmatter({
@@ -377,8 +421,9 @@ def ingest_doi(doi: str, created_by: str = "") -> str:
 
     meta = _fetch_doi_meta(doi)
 
+    no_abstract = not meta["abstract"].strip()
     content = f"Title: {meta['title']}\n\nAbstract: {meta['abstract']}"
-    if not meta["abstract"].strip():
+    if no_abstract:
         print("[ingest_doi] No abstract — using title/journal only.")
         content = f"Title: {meta['title']}\nJournal: {meta['journal']}\nYear: {meta['year']}"
 
@@ -386,6 +431,13 @@ def ingest_doi(doi: str, created_by: str = "") -> str:
     markdown, n_chunks = _llm_to_markdown_chunked(
         content, f"DOI {doi} — {meta['title']}"
     )
+
+    if no_abstract:
+        markdown = (
+            "> ⚠️ No abstract available via CrossRef. This note is based on title and journal "
+            "metadata only. Consider uploading the full PDF for complete coverage.\n\n"
+            + markdown
+        )
 
     tags = _detect_tags(content + " " + markdown)
     frontmatter = _build_frontmatter({

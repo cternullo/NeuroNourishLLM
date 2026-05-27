@@ -73,6 +73,40 @@ except Exception as _db_init_err:
 
 ACTIVITY_LOG = os.path.join(VAULT_PATH, "activity_log.json")
 
+# ── Biomarker index cache ─────────────────────────────────────────────────────
+_biomarker_cache: dict | None = None
+_biomarker_cache_mtime: float = 0.0
+
+
+def _get_biomarker_index() -> dict:
+    """Return {canonical_biomarker: set(filenames)}. Rebuilds when any .md mtime changes."""
+    global _biomarker_cache, _biomarker_cache_mtime
+    try:
+        md_files = [
+            os.path.join(VAULT_WIKI_PATH, f)
+            for f in os.listdir(VAULT_WIKI_PATH)
+            if f.endswith(".md")
+        ]
+    except OSError:
+        return {}
+    max_mtime = max((os.path.getmtime(p) for p in md_files), default=0.0)
+    if _biomarker_cache is not None and max_mtime <= _biomarker_cache_mtime:
+        return _biomarker_cache
+    index: dict = {}
+    for fp in md_files:
+        fname = os.path.basename(fp)
+        try:
+            with open(fp, encoding="utf-8") as f:
+                content = f.read()
+        except OSError:
+            continue
+        fm = _parse_frontmatter(content)
+        for bm in fm.get("biomarkers") or []:
+            index.setdefault(bm, set()).add(fname)
+    _biomarker_cache = index
+    _biomarker_cache_mtime = max_mtime
+    return index
+
 CHAT_SYSTEM = (
     "You are a medical research assistant. You summarise research evidence only. "
     "You do not give medical advice. Always state uncertainty. Never make clinical recommendations.\n\n"
@@ -82,6 +116,12 @@ CHAT_SYSTEM = (
     "[direct answer here]\n\n"
     "**Evidence from the vault:**\n"
     "[what the notes say, with specific details]\n\n"
+    "When the vault context contains quantitative findings, extract and report them explicitly "
+    "under the Evidence section with their exact values. Include where present: correlation "
+    "coefficients, hazard ratios, odds ratios, effect sizes, mean values with standard "
+    "deviations, rates of change per year, p-values, confidence intervals, sample sizes, and "
+    "follow-up durations. Do not paraphrase numerical findings — report the exact figures "
+    "from the source.\n\n"
     "**Conflicting or uncertain findings:**\n"
     "[any contradictions, gaps, or areas of uncertainty]\n\n"
     "**Limitations:**\n"
@@ -276,6 +316,7 @@ def route_ingest_topic():
         suggestions = get_suggestions(note)
         _upsert_note(filename, "topic", topic, word_count, current_user.username)
         _log("ingest_topic", topic, filename)
+        global _biomarker_cache; _biomarker_cache = None
         return jsonify({"success": True, "filename": filename,
                         "word_count": word_count, "suggestions": suggestions})
     except Exception as e:
@@ -299,6 +340,7 @@ def route_ingest_url():
         suggestions = get_suggestions(note)
         _upsert_note(filename, "url", url, word_count, current_user.username)
         _log("ingest_url", url, filename)
+        global _biomarker_cache; _biomarker_cache = None
         return jsonify({"success": True, "filename": filename,
                         "word_count": word_count, "suggestions": suggestions})
     except Exception as e:
@@ -327,6 +369,7 @@ def route_ingest_pdf():
         suggestions = get_suggestions(note)
         _upsert_note(filename, "pdf", file.filename, word_count, current_user.username)
         _log("ingest_pdf", file.filename, filename)
+        global _biomarker_cache; _biomarker_cache = None
         return jsonify({"success": True, "filename": filename,
                         "word_count": word_count, "suggestions": suggestions})
     except Exception as e:
@@ -355,6 +398,7 @@ def route_ingest_pubmed():
         _upsert_note(filename, "pubmed", f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
                      word_count, current_user.username)
         _log("ingest_pubmed", f"PMID:{pmid}", filename)
+        global _biomarker_cache; _biomarker_cache = None
         return jsonify({"success": True, "filename": filename,
                         "word_count": word_count, "suggestions": suggestions})
     except Exception as e:
@@ -379,6 +423,7 @@ def route_ingest_doi():
         _upsert_note(filename, "doi", f"https://doi.org/{doi}",
                      word_count, current_user.username)
         _log("ingest_doi", f"DOI:{doi}", filename)
+        global _biomarker_cache; _biomarker_cache = None
         return jsonify({"success": True, "filename": filename,
                         "word_count": word_count, "suggestions": suggestions})
     except Exception as e:
@@ -414,6 +459,7 @@ def route_chat():
     data = request.get_json(force=True)
     message = (data.get("message") or "").strip()
     history = data.get("history", [])
+    biomarker = (data.get("biomarker") or "").strip()
 
     if not message:
         return jsonify({"error": "message is required"}), 400
@@ -423,9 +469,24 @@ def route_chat():
 
         # Vault RAG: fetch top-20, rescore, return best 7
         chunks = query_index(message)
+
+        # Optional biomarker filter
+        biomarker_warning = ""
+        if biomarker:
+            bm_index = _get_biomarker_index()
+            tagged_files = bm_index.get(biomarker, set())
+            filtered = [c for c in chunks if c["source"] in tagged_files]
+            if filtered:
+                chunks = filtered
+            else:
+                biomarker_warning = (
+                    f"⚠️ No vault notes are tagged with biomarker '{biomarker}'. "
+                    "Showing results across all notes instead.\n\n"
+                )
+
         sources = sorted({c["source"] for c in chunks})
 
-        vault_ctx = (
+        vault_ctx = biomarker_warning + (
             "\n\n---\n\n".join(
                 f"[{c['source']}{'  §' + c['section'] if c.get('section') else ''}]\n{c['text']}"
                 for c in chunks
