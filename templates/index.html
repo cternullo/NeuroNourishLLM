@@ -27,6 +27,33 @@
   --mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
 }
 
+html.light {
+  --bg:          #f5f5f7;
+  --surface:     #ffffff;
+  --surface2:    #f0f0f4;
+  --surface3:    #e8e8ee;
+  --border:      #d8d8e2;
+  --text:        #1a1a2e;
+  --text-muted:  #7a7a9a;
+  --accent:      #6b47b8;
+  --accent-h:    #7c5cbf;
+  --accent-dim:  #ede8f8;
+  --success:     #1fa85e;
+  --error:       #cc3333;
+  --user-bg:     #e8f0fc;
+  --user-border: #c4d6f5;
+  --asst-bg:     #ffffff;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  background: none; border: 1px solid var(--border); border-radius: 20px;
+  padding: 3px 10px; cursor: pointer; font-size: 12px; color: var(--text-muted);
+  display: flex; align-items: center; gap: 5px; transition: all 0.15s;
+  white-space: nowrap;
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+
 html, body {
   height: 100%; background: var(--bg); color: var(--text);
   font-family: var(--font); font-size: 14px; line-height: 1.55; overflow: hidden;
@@ -1021,7 +1048,10 @@ html, body {
         <span class="user-name">{{ username }}</span>
         <span class="role-badge role-{{ role }}">{{ role }}</span>
       </div>
-      <a href="/auth/logout" class="logout-link">Sign out →</a>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:8px;">
+        <a href="/auth/logout" class="logout-link">Sign out →</a>
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
+      </div>
     </div>
 
     <div class="sidebar-scroll">
@@ -3189,6 +3219,27 @@ async function apiFetch(url, opts = {}) {
   if (res.status === 403) { return { error: 'Insufficient permissions' }; }
   return res.json();
 }
+
+// ─────────────────────────────────────────────────────────────
+// Theme toggle
+// ─────────────────────────────────────────────────────────────
+function applyTheme(theme) {
+  const btn = document.getElementById('theme-toggle');
+  if (theme === 'light') {
+    document.documentElement.classList.add('light');
+    if (btn) btn.textContent = '🌙 Dark';
+  } else {
+    document.documentElement.classList.remove('light');
+    if (btn) btn.textContent = '☀ Light';
+  }
+}
+function toggleTheme() {
+  const isLight = document.documentElement.classList.contains('light');
+  const next = isLight ? 'dark' : 'light';
+  localStorage.setItem('nn-theme', next);
+  applyTheme(next);
+}
+applyTheme(localStorage.getItem('nn-theme') || 'dark');
 
 // ─────────────────────────────────────────────────────────────
 // Init
